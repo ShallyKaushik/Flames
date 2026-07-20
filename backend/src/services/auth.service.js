@@ -4,9 +4,11 @@ import generateOTP from "../utils/generateOTP.js";
 import hashPassword from "../utils/hashPassword.js";
 import isCollegeEmail from "../utils/isCollegeEmail.js";
 import sendEmail from "../utils/sendEmail.js";
-
+import {
+    removeRefreshToken
+} from "../repositories/auth.repository.js";
 import otpTemplate from "../templates/otp.template.js";
-
+import jwt from "jsonwebtoken";
 import {
     findUserByEmail,
     findUserByUsername,
@@ -15,7 +17,8 @@ import {
     createUser,
     saveRefreshToken,
     deletePendingUser,
-    updateRefreshToken
+    updateRefreshToken,
+    findUserById
 } from "../repositories/auth.repository.js";
 
 
@@ -219,6 +222,75 @@ const loginUser = async ({ collegeEmail, password }) => {
 
 };
 
+const logoutUser = async (userId) => {
+
+    await removeRefreshToken(userId);
+
+};
+
+
+const refreshAccessToken = async (refreshToken) => {
+
+    if (!refreshToken) {
+
+        throw new ApiError(
+            401,
+            "Refresh token missing"
+        );
+
+    }
+
+    const decoded = jwt.verify(
+
+        refreshToken,
+
+        process.env.JWT_REFRESH_SECRET
+
+    );
+
+    const user = await findUserById(decoded._id);
+
+    if (!user) {
+
+        throw new ApiError(
+            401,
+            "Invalid refresh token"
+        );
+
+    }
+
+    if (user.refreshToken !== refreshToken) {
+
+        throw new ApiError(
+            401,
+            "Refresh token mismatch"
+        );
+
+    }
+
+    const accessToken =
+        user.generateAccessToken();
+
+    const newRefreshToken =
+        user.generateRefreshToken();
+
+    await updateRefreshToken(
+
+        user._id,
+
+        newRefreshToken
+
+    );
+
+    return {
+
+        accessToken,
+
+        refreshToken: newRefreshToken
+
+    };
+
+};
 
 export {
 
@@ -226,6 +298,8 @@ export {
 
     verifyOTP,
 
-    loginUser
+    loginUser,
+    logoutUser,
+    refreshAccessToken
 
 };

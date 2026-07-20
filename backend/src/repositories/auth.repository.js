@@ -70,6 +70,33 @@ const deletePendingUser = (email) =>
         collegeEmail: email,
     });
 
+
+const removeRefreshToken = (userId) => {
+
+    return User.findByIdAndUpdate(
+
+        userId,
+
+        {
+            $unset: {
+                refreshToken: 1
+            }
+        },
+
+        {
+            new: true
+        }
+
+    );
+
+};
+
+const findUserById = (userId) => {
+
+    return User.findById(userId);
+
+};
+
 // =========================
 // Exports
 // =========================
@@ -84,4 +111,7 @@ export {
     updatePendingUser,
     deletePendingUser,
     updateRefreshToken,
+    removeRefreshToken,
+    findUserById
+
 };

@@ -1,9 +1,12 @@
 import express from "express";
-
+import verifyJWT from "../middlewares/auth.middleware.js";
 import {
     register,
     verifyOTP,
-    login
+    login,
+    getCurrentUser,
+    logout,
+    refreshToken
 } from "../controllers/auth.controller.js";
 
 import {
@@ -42,4 +45,26 @@ router.post(
 
 );
 
+router.get(
+    "/me",
+    verifyJWT,
+    getCurrentUser
+);
+
+router.post(
+
+    "/logout",
+
+    verifyJWT,
+
+    logout
+
+);
+router.post(
+
+    "/refresh-token",
+
+    refreshToken
+
+);
 export default router;
