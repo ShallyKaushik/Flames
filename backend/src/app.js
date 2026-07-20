@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import compression from "compression";
-
+import postRoutes from "./routes/post.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import errorHandler from "./middlewares/error.middleware.js";
 
@@ -20,6 +20,8 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes AFTER middleware
 app.use("/api/v1/auth", authRoutes);
+
+app.use("/api/v1/posts", postRoutes);
 
 app.get("/", (req, res) => {
 

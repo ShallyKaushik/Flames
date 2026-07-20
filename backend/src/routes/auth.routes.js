@@ -67,4 +67,9 @@ router.post(
     refreshToken
 
 );
+
+import postRoutes from "./post.routes.js";
+
+router.use("/posts", postRoutes);
+
 export default router;
