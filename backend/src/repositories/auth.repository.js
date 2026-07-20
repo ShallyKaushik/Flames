@@ -25,6 +25,24 @@ const saveRefreshToken = (userId, refreshToken) =>
         { new: true }
     );
 
+    const updateRefreshToken = (userId, refreshToken) => {
+
+    return User.findByIdAndUpdate(
+
+        userId,
+
+        {
+            refreshToken
+        },
+
+        {
+            new: true
+        }
+
+    );
+
+};
+
 // =========================
 // Pending User Queries
 // =========================
@@ -65,4 +83,5 @@ export {
     createPendingUser,
     updatePendingUser,
     deletePendingUser,
+    updateRefreshToken,
 };

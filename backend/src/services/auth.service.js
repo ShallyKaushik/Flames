@@ -14,7 +14,8 @@ import {
     findPendingUserByEmail,
     createUser,
     saveRefreshToken,
-    deletePendingUser
+    deletePendingUser,
+    updateRefreshToken
 } from "../repositories/auth.repository.js";
 
 
@@ -170,9 +171,51 @@ const verifyOTP = async ({ collegeEmail, otp }) => {
 // Login User
 // ==============================
 
-const loginUser = async () => {
+const loginUser = async ({ collegeEmail, password }) => {
 
-    // Will implement next
+    const user = await findUserByEmail(collegeEmail);
+
+    if (!user) {
+
+        throw new ApiError(
+            404,
+            "User not found"
+        );
+
+    }
+
+    const isPasswordCorrect =
+        await user.isPasswordCorrect(password);
+
+    if (!isPasswordCorrect) {
+
+        throw new ApiError(
+            401,
+            "Invalid credentials"
+        );
+
+    }
+
+    const accessToken =
+        user.generateAccessToken();
+
+    const refreshToken =
+        user.generateRefreshToken();
+
+    await updateRefreshToken(
+        user._id,
+        refreshToken
+    );
+
+    return {
+
+        user,
+
+        accessToken,
+
+        refreshToken
+
+    };
 
 };
 

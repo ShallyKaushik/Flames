@@ -8,7 +8,8 @@ import {
 
 import {
     registerValidator,
-    verifyOTPValidator
+    verifyOTPValidator,
+    loginValidator
 } from "../validators/auth.validator.js";
 
 import validate from "../middlewares/validate.middleware.js";
@@ -29,6 +30,16 @@ router.post(
     verifyOTP
 );
 
-router.post("/login", login);
+router.post(
+
+    "/login",
+
+    loginValidator,
+
+    validate,
+
+    login
+
+);
 
 export default router;

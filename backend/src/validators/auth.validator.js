@@ -43,3 +43,15 @@ export const verifyOTPValidator = [
         .withMessage("OTP must be 6 digits")
 
 ];
+
+export const loginValidator = [
+
+    body("collegeEmail")
+        .isEmail()
+        .withMessage("Valid email is required"),
+
+    body("password")
+        .notEmpty()
+        .withMessage("Password is required")
+
+];
