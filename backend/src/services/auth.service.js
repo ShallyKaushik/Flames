@@ -1,0 +1,188 @@
+import ApiError from "../utils/ApiError.js";
+
+import generateOTP from "../utils/generateOTP.js";
+import hashPassword from "../utils/hashPassword.js";
+import isCollegeEmail from "../utils/isCollegeEmail.js";
+import sendEmail from "../utils/sendEmail.js";
+
+import otpTemplate from "../templates/otp.template.js";
+
+import {
+    findUserByEmail,
+    findUserByUsername,
+    updatePendingUser,
+    findPendingUserByEmail,
+    createUser,
+    saveRefreshToken,
+    deletePendingUser
+} from "../repositories/auth.repository.js";
+
+
+// ==============================
+// Register User
+// ==============================
+
+const registerUser = async (userData) => {
+
+    const {
+        fullName,
+        username,
+        collegeEmail,
+        password,
+        personalEmail,
+        phoneNumber
+    } = userData;
+
+    if (!isCollegeEmail(collegeEmail)) {
+        throw new ApiError(400, "Invalid college email.");
+    }
+
+    const existingEmail = await findUserByEmail(collegeEmail);
+
+    if (existingEmail) {
+        throw new ApiError(400, "College email already registered.");
+    }
+
+    const existingUsername = await findUserByUsername(username);
+
+    if (existingUsername) {
+        throw new ApiError(400, "Username already exists.");
+    }
+
+    const hashedPassword = await hashPassword(password);
+
+    const otp = generateOTP();
+
+    await updatePendingUser(collegeEmail, {
+
+        fullName,
+
+        username,
+
+        collegeEmail,
+
+        personalEmail,
+
+        phoneNumber,
+
+        password: hashedPassword,
+
+        otp,
+
+        otpExpiresAt: new Date(Date.now() + 5 * 60 * 1000),
+
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000)
+
+    });
+
+    await sendEmail(
+
+        collegeEmail,
+
+        "Flames Email Verification",
+
+        otpTemplate(otp)
+
+    );
+
+};
+
+
+// ==============================
+// Verify OTP
+// ==============================
+
+const verifyOTP = async ({ collegeEmail, otp }) => {
+
+    console.log("1");
+
+    const pendingUser = await findPendingUserByEmail(collegeEmail);
+    console.log("2");
+
+    if (!pendingUser) {
+        throw new ApiError(404, "Registration request not found.");
+    }
+
+    console.log("3");
+
+    if (pendingUser.otpExpiresAt < new Date()) {
+        throw new ApiError(400, "OTP has expired.");
+    }
+
+    console.log("4");
+
+    if (pendingUser.otp !== otp) {
+        throw new ApiError(400, "Invalid OTP.");
+    }
+
+    console.log("5");
+
+    const user = await createUser({
+        fullName: pendingUser.fullName,
+        username: pendingUser.username,
+        collegeEmail: pendingUser.collegeEmail,
+        personalEmail: pendingUser.personalEmail,
+        phoneNumber: pendingUser.phoneNumber,
+        password: pendingUser.password,
+        isVerified: true
+    });
+
+    console.log("6");
+
+    const accessToken = user.generateAccessToken();
+
+    console.log("7");
+
+    const refreshToken = user.generateRefreshToken();
+
+    console.log("8");
+
+    await saveRefreshToken(user._id, refreshToken);
+
+    console.log("9");
+
+    await deletePendingUser(collegeEmail);
+
+    console.log("10");
+
+    return {
+        user,
+        accessToken,
+        refreshToken
+    };
+
+    await deletePendingUser(collegeEmail);
+
+    return {
+
+        user,
+
+        accessToken,
+
+        refreshToken
+
+    };
+
+};
+
+
+// ==============================
+// Login User
+// ==============================
+
+const loginUser = async () => {
+
+    // Will implement next
+
+};
+
+
+export {
+
+    registerUser,
+
+    verifyOTP,
+
+    loginUser
+
+};
