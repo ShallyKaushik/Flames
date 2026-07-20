@@ -5,11 +5,14 @@ import validate from "../middlewares/validate.middleware.js";
 import { createPostValidator, postIdValidator, updatePostValidator,} from "../validators/post.validator.js";
 import { createPost , getAllPosts, getPostById, updatePost, deletePost} from "../controllers/post.controller.js";
 
+import upload from "../middlewares/multer.middleware.js";
+
 const router = Router();
 
 router.post(
     "/",
     verifyJWT,
+    upload.single("image"),
     createPostValidator,
     validate,
     createPost

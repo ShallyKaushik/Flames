@@ -1,7 +1,11 @@
-import { createPostService,  getAllPostsService, getPostByIdService, 
+import {
+    createPostService,
+    getAllPostsService,
+    getPostByIdService,
     updatePostService,
     deletePostService,
 } from "../services/post.service.js";
+
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiResponse from "../utils/ApiResponse.js";
 
@@ -9,7 +13,8 @@ const createPost = asyncHandler(async (req, res) => {
 
     const post = await createPostService(
         req.body,
-        req.user._id
+        req.user._id,
+        req.file
     );
 
     return res.status(201).json(
@@ -90,6 +95,5 @@ export {
     getAllPosts,
     getPostById,
     updatePost,
-    deletePost
-
+    deletePost,
 };

@@ -18,6 +18,8 @@ const expiryDays = {
     "buy-sell": 10,
 };
 
+import uploadOnCloudinary from "../utils/cloudinary.js";
+
 const calculateExpiry = (category) => {
     const days = expiryDays[category];
 
@@ -29,15 +31,15 @@ const calculateExpiry = (category) => {
     return expiry;
 };
 
-const createPostService = async (data, userId) => {
-    const post = await createPost({
-        ...data,
-        author: userId,
-        expiresAt: calculateExpiry(data.category),
-    });
+// const createPostService = async (data, userId) => {
+//     const post = await createPost({
+//         ...data,
+//         author: userId,
+//         expiresAt: calculateExpiry(data.category),
+//     });
 
-    return post;
-};
+//     return post;
+// };
 
 const getAllPostsService = async () => {
 
@@ -122,6 +124,30 @@ const deletePostService = async (postId, userId) => {
     await deletePost(postId);
 
     return;
+};
+
+const createPostService = async (data, userId, file) => {
+
+    let imageUrl = null;
+
+    if (file) {
+        imageUrl = await uploadOnCloudinary(file.path);
+    }
+
+    const post = await createPost({
+
+        ...data,
+
+        author: userId,
+
+        expiresAt: calculateExpiry(data.category),
+
+        images: imageUrl ? [imageUrl] : [],
+
+    });
+
+    return post;
+
 };
 
 export {
