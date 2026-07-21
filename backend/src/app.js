@@ -7,6 +7,10 @@ import authRoutes from "./routes/auth.routes.js";
 import errorHandler from "./middlewares/error.middleware.js";
 import likeRoutes from "./routes/like.routes.js";
 import commentRoutes from "./routes/comment.routes.js";
+import profileRoutes from "./routes/profile.routes.js";
+import announcementRoutes from "./routes/announcement.routes.js";
+
+import discussionRoutes from "./routes/discussion.routes.js";
 
 
 const app = express();
@@ -31,6 +35,17 @@ app.use("/api/v1/likes", likeRoutes);
 
 app.use("/api/v1/comments", commentRoutes);
 
+app.use("/api/v1/profile", profileRoutes);
+
+app.use(
+    "/api/v1/announcements",
+    announcementRoutes
+);
+
+app.use(
+    "/api/v1/discussion",
+    discussionRoutes
+);
 
 app.get("/", (req, res) => {
 

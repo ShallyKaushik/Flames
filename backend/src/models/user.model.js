@@ -46,10 +46,27 @@ const userSchema = new mongoose.Schema(
             default: "",
         },
 
+        gender: {
+    type: String,
+    enum: [
+        "male",
+        "female",
+        "prefer-not-to-say",
+    ],
+    default: "prefer-not-to-say",
+},
+
         bio: {
-            type: String,
-            default: "",
-        },
+    type: String,
+    maxlength: 150,
+    default: "",
+},
+
+
+avatar: {
+    type: String,
+    default: "avatar-1.png",
+},
 
         role: {
             type: String,
