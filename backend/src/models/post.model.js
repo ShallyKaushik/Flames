@@ -48,32 +48,48 @@ const postSchema = new mongoose.Schema(
                 type: String,
             },
         ],
-        poll: {
-    question: {
-        type: String,
-        trim: true,
-    },
 
-    options: [
-        {
-            text: {
+        poll: {
+            question: {
                 type: String,
-                required: true,
                 trim: true,
             },
 
-            votes: {
-                type: Number,
-                default: 0,
+            options: [
+                {
+                    text: {
+                        type: String,
+                        required: true,
+                        trim: true,
+                    },
+
+                    votes: {
+                        type: Number,
+                        default: 0,
+                    },
+                },
+            ],
+
+            votedUsers: [
+                {
+                    user: {
+                        type: mongoose.Schema.Types.ObjectId,
+                        ref: "User",
+                    },
+
+                    optionIndex: {
+                        type: Number,
+                        required: true,
+                    },
+                },
+            ],
+
+            expiresAt: {
+                type: Date,
+                default: null,
             },
         },
-    ],
 
-    expiresAt: {
-        type: Date,
-        default: null,
-    },
-},
         likesCount: {
             type: Number,
             default: 0,

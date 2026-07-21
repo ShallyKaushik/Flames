@@ -2,9 +2,13 @@ import ApiError from "../utils/ApiError.js";
 import {
     createPost,
     getAllPosts,
+    getPostsCount,
     getPostById,
     updatePost,
-    deletePost
+    deletePost,
+    searchPosts,
+    searchPostsCount,
+    votePoll,
 } from "../repositories/post.repository.js";
 const expiryDays = {
     general: 3,
@@ -41,29 +45,160 @@ const calculateExpiry = (category) => {
 //     return post;
 // };
 
-const getAllPostsService = async () => {
+const getAllPostsService = async (query) => {
 
-    const posts = await getAllPosts();
+    const {
+        category,
+        anonymous,
+        page = 1,
+        limit = 10,
+        sort = "latest",
+    } = query;
+
+    const filter = {};
+
+    if (category) {
+        filter.category = category;
+    }
+
+    if (anonymous === "true") {
+        filter.isAnonymous = true;
+    }
+
+    const sortOption =
+        sort === "oldest"
+            ? { createdAt: 1 }
+            : { createdAt: -1 };
+
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const posts = await getAllPosts(
+        filter,
+        skip,
+        Number(limit),
+        sortOption
+    );
+
+    const totalPosts = await getPostsCount(filter);
 
     const formattedPosts = posts.map((post) => {
 
         const postObj = post.toObject();
 
         if (postObj.isAnonymous) {
-
             postObj.author = {
                 fullName: "Anonymous",
                 username: null,
                 avatar: null,
             };
-
         }
 
         return postObj;
 
     });
 
-    return formattedPosts;
+    return {
+    posts: formattedPosts,
+
+    pagination: {
+        currentPage: Number(page),
+        limit: Number(limit),
+        totalPosts,
+        totalPages: Math.ceil(totalPosts / Number(limit)),
+        hasNextPage:
+            Number(page) < Math.ceil(totalPosts / Number(limit)),
+        hasPreviousPage:
+            Number(page) > 1,
+    },
+};
+
+};
+
+//Search Posts :
+
+const searchPostsService = async (queryParams) => {
+
+    const {
+        query,
+        category,
+        page = 1,
+        limit = 10,
+    } = queryParams;
+
+    const filter = {
+        $or: [
+            {
+                title: {
+                    $regex: query,
+                    $options: "i",
+                },
+            },
+            {
+                content: {
+                    $regex: query,
+                    $options: "i",
+                },
+            },
+        ],
+    };
+
+    if (category) {
+        filter.category = category;
+    }
+
+    const skip =
+        (Number(page) - 1) * Number(limit);
+
+    const posts = await searchPosts(
+        filter,
+        skip,
+        Number(limit)
+    );
+
+    const totalPosts =
+        await searchPostsCount(filter);
+
+    const formattedPosts = posts.map((post) => {
+
+        const postObj = post.toObject();
+
+        if (postObj.isAnonymous) {
+            postObj.author = {
+                fullName: "Anonymous",
+                username: null,
+                avatar: null,
+            };
+        }
+
+        return postObj;
+
+    });
+
+    return {
+
+        posts: formattedPosts,
+
+        pagination: {
+
+            currentPage: Number(page),
+
+            limit: Number(limit),
+
+            totalPosts,
+
+            totalPages: Math.ceil(
+                totalPosts / Number(limit)
+            ),
+
+            hasNextPage:
+                Number(page) <
+                Math.ceil(totalPosts / Number(limit)),
+
+            hasPreviousPage:
+                Number(page) > 1,
+        },
+
+    };
 
 };
 
@@ -150,10 +285,66 @@ const createPostService = async (data, userId, file) => {
 
 };
 
+const votePollService = async (
+    postId,
+    userId,
+    optionIndex
+) => {
+
+    const post = await getPostById(postId);
+
+    if (!post) {
+        throw new ApiError(404, "Post not found");
+    }
+
+    if (!post.poll || !post.poll.question) {
+        throw new ApiError(400, "This post has no poll");
+    }
+
+    if (
+        post.poll.expiresAt &&
+        new Date() > new Date(post.poll.expiresAt)
+    ) {
+        throw new ApiError(400, "Poll has expired");
+    }
+
+    if (
+        optionIndex < 0 ||
+        optionIndex >= post.poll.options.length
+    ) {
+        throw new ApiError(400, "Invalid poll option");
+    }
+
+    const alreadyVoted = post.poll.votedUsers.some(
+        (vote) => vote.user.toString() === userId.toString()
+    );
+
+    if (alreadyVoted) {
+        throw new ApiError(
+            400,
+            "You have already voted in this poll"
+        );
+    }
+
+    post.poll.options[optionIndex].votes += 1;
+
+    post.poll.votedUsers.push({
+        user: userId,
+        optionIndex,
+    });
+
+    await votePoll(post);
+
+    return post.poll;
+
+};
+
 export {
     createPostService,
     getAllPostsService,
     getPostByIdService,
     updatePostService,
     deletePostService,
+    searchPostsService,
+    votePollService
 };

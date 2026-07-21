@@ -4,6 +4,8 @@ import {
     getPostByIdService,
     updatePostService,
     deletePostService,
+    searchPostsService,
+    votePollService
 } from "../services/post.service.js";
 
 import asyncHandler from "../utils/asyncHandler.js";
@@ -29,7 +31,7 @@ const createPost = asyncHandler(async (req, res) => {
 
 const getAllPosts = asyncHandler(async (req, res) => {
 
-    const posts = await getAllPostsService();
+   const posts = await getAllPostsService(req.query);
 
     return res.status(200).json(
         new ApiResponse(
@@ -37,6 +39,27 @@ const getAllPosts = asyncHandler(async (req, res) => {
             posts,
             "Posts fetched successfully"
         )
+    );
+
+});
+
+const searchPosts = asyncHandler(async (req, res) => {
+
+    const result =
+        await searchPostsService(req.query);
+
+    return res.status(200).json(
+
+        new ApiResponse(
+
+            200,
+
+            result,
+
+            "Search results fetched successfully"
+
+        )
+
     );
 
 });
@@ -90,10 +113,30 @@ const deletePost = asyncHandler(async (req, res) => {
 
 });
 
+const votePoll = asyncHandler(async (req, res) => {
+
+    const poll = await votePollService(
+        req.params.postId,
+        req.user._id,
+        req.body.optionIndex
+    );
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            poll,
+            "Vote recorded successfully"
+        )
+    );
+
+});
+
 export {
     createPost,
     getAllPosts,
     getPostById,
     updatePost,
     deletePost,
+    searchPosts,
+    votePoll
 };

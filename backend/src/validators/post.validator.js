@@ -68,3 +68,15 @@ export const updatePostValidator = [
         .isBoolean(),
 
 ];
+
+export const votePollValidator = [
+
+    param("postId")
+        .isMongoId()
+        .withMessage("Invalid post id"),
+
+    body("optionIndex")
+        .isInt({ min: 0 })
+        .withMessage("Invalid option"),
+
+];

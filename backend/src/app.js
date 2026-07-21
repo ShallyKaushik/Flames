@@ -5,6 +5,9 @@ import compression from "compression";
 import postRoutes from "./routes/post.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import errorHandler from "./middlewares/error.middleware.js";
+import likeRoutes from "./routes/like.routes.js";
+import commentRoutes from "./routes/comment.routes.js";
+
 
 const app = express();
 
@@ -23,6 +26,12 @@ app.use("/api/v1/auth", authRoutes);
 
 app.use("/api/v1/posts", postRoutes);
 
+app.use("/api/v1/likes", likeRoutes);
+
+
+app.use("/api/v1/comments", commentRoutes);
+
+
 app.get("/", (req, res) => {
 
     res.json({
@@ -33,5 +42,7 @@ app.get("/", (req, res) => {
 });
 
 app.use(errorHandler);
+
+
 
 export default app;
