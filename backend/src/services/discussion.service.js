@@ -10,6 +10,7 @@ import {
     getLatestUserMessage,
     getLastMessages,
 } from "../repositories/discussion.repository.js";
+import { createNotificationService } from "./notification.service.js";
 
 const MESSAGE_LIMIT = 120;
 const COOLDOWN = 3000;
@@ -232,6 +233,16 @@ const deleteMessageService = async (
             "Unauthorized"
         );
 
+    }
+
+    if (message.sender.toString() !== user._id.toString() && user.role === "admin") {
+        await createNotificationService({
+            recipient: message.sender,
+            sender: user._id,
+            type: "admin_deletion",
+            title: "Message Removed",
+            message: `Your chat message was removed by an admin.`,
+        });
     }
 
     return await deleteMessage(

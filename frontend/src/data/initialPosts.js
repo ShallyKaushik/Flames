@@ -156,7 +156,7 @@ export const INITIAL_POSTS = [
     categoryLabel: 'TEAMUP',
     timeAgo: '8h ago',
     author: {
-      name: 'Alex Rivers',
+      name: 'User',
       verified: true,
       sub: "CS '25",
       avatar: defaultPng,

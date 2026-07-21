@@ -4,6 +4,7 @@ import {
     registerUser,
     loginUser,
     verifyOTP as verifyOTPService,
+    resendOTP as resendOTPService,
     logoutUser,
     refreshAccessToken
 } from "../services/auth.service.js";
@@ -41,6 +42,13 @@ const verifyOTP = asyncHandler(async (req, res) => {
 
     );
 
+});
+
+const resendOTP = asyncHandler(async (req, res) => {
+    await resendOTPService(req.body.collegeEmail);
+    return res.status(200).json(
+        new ApiResponse(200, null, "OTP resent successfully")
+    );
 });
 
 const login = asyncHandler(async (req, res) => {
@@ -117,6 +125,7 @@ const refreshToken = asyncHandler(async (req, res) => {
 export {
     register,
     verifyOTP,
+    resendOTP,
     login,
     getCurrentUser,
     logout,

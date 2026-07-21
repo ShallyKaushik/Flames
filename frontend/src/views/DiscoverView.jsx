@@ -1,9 +1,19 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { CATEGORIES } from '../data/categories';
-import { Sparkles, TrendingUp, Users, ArrowRight } from 'lucide-react';
+import { Sparkles, TrendingUp, Users, ArrowRight, Megaphone, Loader2 } from 'lucide-react';
 import { FoxMascot } from '../components/FoxMascot';
+import { fetchAnnouncements } from '../services/backendStubs';
 
 export function DiscoverView({ onSelectCategory }) {
+  const [announcements, setAnnouncements] = useState([]);
+  const [isLoadingAnnouncements, setIsLoadingAnnouncements] = useState(true);
+
+  useEffect(() => {
+    fetchAnnouncements()
+      .then(setAnnouncements)
+      .catch(() => setAnnouncements([]))
+      .finally(() => setIsLoadingAnnouncements(false));
+  }, []);
   return (
     <div className="bg-[#fcf8f3] text-[#2c1a11] min-h-screen pb-24 animate-fade-in font-sans">
       {/* Light Theme Discover Header with Mascot 8 */}
@@ -43,6 +53,34 @@ export function DiscoverView({ onSelectCategory }) {
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Announcements Section */}
+        <div className="bg-white p-5 rounded-3xl border border-[#ebdccf] shadow-xs space-y-4">
+          <div className="flex items-center gap-2">
+            <Megaphone className="w-4 h-4 text-[#f47b31]" />
+            <h2 className="text-sm font-extrabold text-[#2c1a11]">Announcements</h2>
+          </div>
+
+          {isLoadingAnnouncements ? (
+            <div className="flex justify-center py-4">
+              <Loader2 className="w-5 h-5 text-[#f47b31] animate-spin" />
+            </div>
+          ) : announcements.length === 0 ? (
+            <p className="text-xs text-stone-400 text-center py-4">No announcements right now.</p>
+          ) : (
+            <div className="space-y-2">
+              {announcements.map((a) => (
+                <div key={a._id || a.id} className="bg-[#fcf8f3] border border-[#ebdccf] rounded-2xl p-3 space-y-1">
+                  <h3 className="text-xs font-extrabold text-[#2c1a11]">{a.title}</h3>
+                  {a.content && <p className="text-xs text-stone-600 leading-relaxed">{a.content}</p>}
+                  {a.createdAt && (
+                    <span className="text-[10px] text-stone-400">{new Date(a.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Trending Campus Topics Section (Coming Soon with Sleeping Fox Mascot 9) */}

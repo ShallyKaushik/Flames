@@ -51,7 +51,7 @@ const updateComment = asyncHandler(async (req, res) => {
     const comment =
         await updateCommentService(
             req.params.commentId,
-            req.user._id,
+            req.user,
             req.body
         );
 
@@ -69,7 +69,7 @@ const deleteComment = asyncHandler(async (req, res) => {
 
     await deleteCommentService(
         req.params.commentId,
-        req.user._id
+        req.user
     );
 
     return res.status(200).json(

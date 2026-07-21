@@ -3,6 +3,7 @@ import verifyJWT from "../middlewares/auth.middleware.js";
 import {
     register,
     verifyOTP,
+    resendOTP,
     login,
     getCurrentUser,
     logout,
@@ -31,6 +32,11 @@ router.post(
     verifyOTPValidator,
     validate,
     verifyOTP
+);
+
+router.post(
+    "/resend-otp",
+    resendOTP
 );
 
 router.post(

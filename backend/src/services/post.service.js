@@ -23,6 +23,7 @@ const expiryDays = {
 };
 
 import uploadOnCloudinary from "../utils/cloudinary.js";
+import { createNotificationService } from "./notification.service.js";
 
 const calculateExpiry = (category) => {
     const days = expiryDays[category];
@@ -223,7 +224,7 @@ const getPostByIdService = async (postId) => {
     return postObj;
 };
 
-const updatePostService = async (postId, userId, data) => {
+const updatePostService = async (postId, user, data) => {
 
     const post = await getPostById(postId);
 
@@ -231,7 +232,7 @@ const updatePostService = async (postId, userId, data) => {
         throw new ApiError(404, "Post not found");
     }
 
-    if (post.author._id.toString() !== userId.toString()) {
+    if (post.author._id.toString() !== user._id.toString() && user.role !== "admin") {
         throw new ApiError(403, "You are not allowed to update this post");
     }
 
@@ -244,7 +245,7 @@ const updatePostService = async (postId, userId, data) => {
     return await updatePost(postId, data);
 };
 
-const deletePostService = async (postId, userId) => {
+const deletePostService = async (postId, user) => {
 
     const post = await getPostById(postId);
 
@@ -252,11 +253,22 @@ const deletePostService = async (postId, userId) => {
         throw new ApiError(404, "Post not found");
     }
 
-    if (post.author._id.toString() !== userId.toString()) {
+    if (post.author._id.toString() !== user._id.toString() && user.role !== "admin") {
         throw new ApiError(403, "You are not allowed to delete this post");
     }
 
     await deletePost(postId);
+
+    if (post.author._id.toString() !== user._id.toString() && user.role === "admin") {
+        await createNotificationService({
+            recipient: post.author._id,
+            sender: user._id,
+            type: "admin_deletion",
+            title: "Post Removed",
+            message: `Your post '${post.title}' was removed by an admin.`,
+            relatedPost: null
+        });
+    }
 
     return;
 };

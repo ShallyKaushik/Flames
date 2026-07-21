@@ -1,102 +1,264 @@
-/**
- * Flames Campus App - Backend Service Stubs
- * All functions include // TODO: connect to backend markers.
- */
+import api from './api';
+import { normalizePost, normalizePosts } from './normalizePost';
 
-// TODO: connect to backend - Submit user issue report
-export async function reportIssue(reportData) {
-  console.log('[API Stub] Submitting issue report:', reportData);
-  // TODO: connect to backend - POST /api/v1/reports { topic, category, description }
-  return new Promise((resolve) => setTimeout(resolve, 350));
+// ── helper: read current user _id from localStorage ──────────────────────────
+function getCurrentUserId() {
+  try {
+    const saved = localStorage.getItem('flames_user');
+    if (saved) {
+      const u = JSON.parse(saved);
+      return u._id || u.id || null;
+    }
+  } catch (_) {}
+  return null;
 }
 
-// TODO: connect to backend - Fetch real-time active online user count
-export async function fetchOnlineUserCount() {
-  console.log('[API Stub] Fetching active online user count...');
-  // TODO: connect to backend - GET /api/v1/open-chat/presence or WebSocket presence
-  return new Promise((resolve) => setTimeout(() => resolve(142), 200));
+// ── Posts ─────────────────────────────────────────────────────────────────────
+
+export async function fetchAllPosts(params = {}) {
+  const response = await api.get('/posts', { params });
+  const raw = response.data.message || response.data.data;
+  const posts = raw.posts || raw || [];
+  return normalizePosts(posts, getCurrentUserId());
 }
 
-// TODO: connect to backend - Fetch user notifications list
-export async function fetchNotifications() {
-  console.log('[API Stub] Fetching notifications...');
-  // TODO: connect to backend - GET /api/v1/notifications
-  return new Promise((resolve) => setTimeout(resolve, 300));
-}
-
-// TODO: connect to backend - Search posts, people, tags, and clubs
 export async function searchContent(query) {
-  console.log('[API Stub] Searching content for query:', query);
-  // TODO: connect to backend - GET /api/v1/search?q={query}
-  return new Promise((resolve) => setTimeout(resolve, 200));
+  if (!query || !query.trim()) return fetchAllPosts();
+  const response = await api.get('/posts/search', { params: { query } });
+  const raw = response.data.message || response.data.data;
+  const posts = raw.posts || raw || [];
+  return normalizePosts(posts, getCurrentUserId());
 }
 
-// TODO: connect to backend - Apply feed filter and sorting criteria
-export async function applyFilters(filters) {
-  console.log('[API Stub] Applying feed filters:', filters);
-  // TODO: connect to backend - POST /api/v1/feed/filter
-  return new Promise((resolve) => setTimeout(resolve, 200));
-}
-
-// TODO: connect to backend - Filter feed by specific category ID
 export async function filterByCategory(categoryId) {
-  console.log('[API Stub] Filtering feed by category:', categoryId);
-  // TODO: connect to backend - GET /api/v1/posts?category={categoryId}
-  return new Promise((resolve) => setTimeout(resolve, 150));
+  return fetchAllPosts({ category: categoryId });
 }
 
-// TODO: connect to backend - Create a new post (Text, Image, Poll, Team, Lost & Found)
+export async function applyFilters(filters) {
+  const params = {};
+  if (filters.category && filters.category !== 'all') params.category = filters.category;
+  if (filters.sortBy && filters.sortBy !== 'newest') params.sort = filters.sortBy;
+  return fetchAllPosts(params);
+}
+
 export async function createPost(postData) {
-  console.log('[API Stub] Creating post with payload:', postData);
-  // TODO: connect to backend - POST /api/v1/posts
-  return new Promise((resolve) => setTimeout(resolve, 400));
+  const postType = postData.type || 'text';
+
+  // For image posts, we MUST use multipart/form-data
+  if (postType === 'image') {
+    const formData = new FormData();
+    if (postData.title) formData.append('title', postData.title);
+    if (postData.content || postData.description) {
+      formData.append('content', postData.content || postData.description);
+    }
+    if (postData.category) formData.append('category', postData.category);
+    formData.append('isAnonymous', postData.isAnonymous ? 'true' : 'false');
+    formData.append('type', postType);
+
+    if (postData.image instanceof File) {
+      formData.append('image', postData.image);
+    }
+
+    const response = await api.post('/posts', formData);
+    const raw = response.data.message || response.data.data;
+    return normalizePost(raw, getCurrentUserId());
+  }
+
+  // For text and poll posts, send as standard JSON so Express parses nested objects (like poll options) correctly.
+  const payload = {
+    title: postData.title,
+    content: postData.content || postData.description,
+    category: postData.category,
+    isAnonymous: !!postData.isAnonymous,
+    type: postType,
+  };
+
+  if (postType === 'poll' && Array.isArray(postData.options)) {
+    payload.poll = {
+      question: postData.title || postData.question,
+      options: postData.options.map(o => ({ text: typeof o === 'string' ? o : o.text })),
+    };
+  }
+
+  const response = await api.post('/posts', payload);
+  const raw = response.data.message || response.data.data;
+  return normalizePost(raw, getCurrentUserId());
 }
 
-// TODO: connect to backend - Send message to Campus Open Chat shoutbox
-export async function sendOpenChatMessage(messageData) {
-  console.log('[API Stub] Sending message to Campus Open Chat:', messageData);
-  // TODO: connect to backend - POST /api/v1/open-chat/messages
-  return new Promise((resolve) => setTimeout(resolve, 200));
+export async function updatePost(postId, postData) {
+  const payload = {
+    title: postData.title,
+    content: postData.content || postData.description,
+    category: postData.category,
+    isAnonymous: !!postData.isAnonymous,
+  };
+  const response = await api.patch(`/posts/${postId}`, payload);
+  const raw = response.data.message || response.data.data;
+  return normalizePost(raw, getCurrentUserId());
 }
 
-// TODO: connect to backend - Toggle like state for a post
-export async function toggleLike(postId) {
-  console.log('[API Stub] Toggling like for post ID:', postId);
-  // TODO: connect to backend - POST /api/v1/posts/{postId}/like
-  return new Promise((resolve) => setTimeout(resolve, 100));
+export async function deletePost(postId) {
+  await api.delete(`/posts/${postId}`);
 }
 
-// TODO: connect to backend - Open and fetch post comments
+// ── Likes ─────────────────────────────────────────────────────────────────────
+
+export async function toggleLike(postId, isCurrentlyLiked) {
+  if (isCurrentlyLiked) {
+    await api.delete(`/likes/${postId}`);
+  } else {
+    await api.post(`/likes/${postId}`);
+  }
+}
+
+// ── Comments ──────────────────────────────────────────────────────────────────
+
+export async function fetchComments(postId) {
+  const response = await api.get(`/comments/${postId}`);
+  const raw = response.data.message || response.data.data;
+  return raw.comments || raw || [];
+}
+
+export async function addComment(postId, content) {
+  const response = await api.post(`/comments/${postId}`, { content });
+  return response.data.message || response.data.data;
+}
+
+// ── Polls ─────────────────────────────────────────────────────────────────────
+
+export async function castVote(postId, optionIndex) {
+  const response = await api.post(`/posts/${postId}/vote`, { optionIndex });
+  return response.data.message || response.data.data;
+}
+
+// ── Profile ───────────────────────────────────────────────────────────────────
+
+export async function getProfile() {
+  const response = await api.get('/profile');
+  return response.data.message || response.data.data;
+}
+
+export async function updateProfile(data) {
+  const response = await api.patch('/profile', data);
+  return response.data.message || response.data.data;
+}
+
+export async function getMyPosts() {
+  const response = await api.get('/profile/posts');
+  const raw = response.data.message || response.data.data;
+  const posts = raw.posts || raw || [];
+  return normalizePosts(posts, getCurrentUserId());
+}
+
+export async function getMyPolls() {
+  const response = await api.get('/profile/polls');
+  const raw = response.data.message || response.data.data;
+  const posts = raw.polls || raw.posts || raw || [];
+  return normalizePosts(posts, getCurrentUserId());
+}
+
+export async function getPublicProfile(userId) {
+  const response = await api.get(`/profile/${userId}`);
+  return response.data.message || response.data.data;
+}
+
+export async function getPublicPosts(userId) {
+  const response = await api.get(`/profile/${userId}/posts`);
+  const raw = response.data.message || response.data.data;
+  const posts = raw.posts || raw || [];
+  return normalizePosts(posts, getCurrentUserId());
+}
+
+export async function getPublicPolls(userId) {
+  const response = await api.get(`/profile/${userId}/polls`);
+  const raw = response.data.message || response.data.data;
+  const posts = raw.polls || raw.posts || raw || [];
+  return normalizePosts(posts, getCurrentUserId());
+}
+
+// ── Announcements ─────────────────────────────────────────────────────────────
+
+export async function fetchAnnouncements() {
+  const response = await api.get('/announcements');
+  const raw = response.data.message || response.data.data;
+  return raw.announcements || raw || [];
+}
+
+// ── Discussion ────────────────────────────────────────────────────────────────
+
+export async function fetchDiscussionMessages(page = 1, limit = 50) {
+  const response = await api.get('/discussion/messages', { params: { page, limit } });
+  const raw = response.data.message || response.data.data;
+  return raw.messages || raw || [];
+}
+
+// ── Misc (stubs kept for components that aren't wired yet) ────────────────────
+
+function timeAgo(date) {
+  const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+  let interval = seconds / 31536000;
+  if (interval > 1) return Math.floor(interval) + " years ago";
+  interval = seconds / 2592000;
+  if (interval > 1) return Math.floor(interval) + " months ago";
+  interval = seconds / 86400;
+  if (interval > 1) return Math.floor(interval) + " days ago";
+  interval = seconds / 3600;
+  if (interval > 1) return Math.floor(interval) + " hours ago";
+  interval = seconds / 60;
+  if (interval > 1) return Math.floor(interval) + " minutes ago";
+  return Math.floor(seconds) + " seconds ago";
+}
+
+export function normalizeNotification(n) {
+  return {
+    id: n._id,
+    avatar: n.sender ? n.sender.avatar : 'fox-mascot',
+    user: n.sender ? n.sender.fullName : 'Flames Admin',
+    message: n.message,
+    time: timeAgo(n.createdAt),
+    unread: !n.isRead
+  };
+}
+
+export async function fetchNotifications() {
+  const response = await api.get('/notifications');
+  const raw = response.data.message || response.data.data;
+  return (raw || []).map(normalizeNotification);
+}
+
+export async function markNotificationRead(notificationId) {
+  const response = await api.patch(`/notifications/${notificationId}/read`);
+  return response.data.message || response.data.data;
+}
+
+export async function markAllNotificationsRead() {
+  const response = await api.patch('/notifications/read-all');
+  return response.data.message || response.data.data;
+}
+
+export async function fetchOnlineUserCount() {
+  // Not implemented in backend yet
+  return null;
+}
+
+export async function openAnonymousMessage() {
+  return null;
+}
+
+export async function joinTeam() {
+  return null;
+}
+
+export async function reportIssue(reportData) {
+  console.log('[Report] Issue reported:', reportData);
+  return null;
+}
+
+// kept for backward-compat (no longer used)
 export async function openComments(postId) {
-  console.log('[API Stub] Opening comments for post ID:', postId);
-  // TODO: connect to backend - GET /api/v1/posts/{postId}/comments
-  return new Promise((resolve) => setTimeout(resolve, 200));
+  return fetchComments(postId);
 }
 
-// TODO: connect to backend - Send join request for a team request post
-export async function joinTeam(postId) {
-  console.log('[API Stub] Joining team for post ID:', postId);
-  // TODO: connect to backend - POST /api/v1/teams/{postId}/join
-  return new Promise((resolve) => setTimeout(resolve, 250));
-}
-
-// TODO: connect to backend - Cast vote on a live poll post
-export async function castVote(postId, optionId) {
-  console.log('[API Stub] Casting vote on poll ID:', postId, 'for option:', optionId);
-  // TODO: connect to backend - POST /api/v1/polls/{postId}/vote
-  return new Promise((resolve) => setTimeout(resolve, 200));
-}
-
-// TODO: connect to backend - Send anonymous DM/message to post author
-export async function openAnonymousMessage(postId) {
-  console.log('[API Stub] Opening anonymous message composer for post ID:', postId);
-  // TODO: connect to backend - POST /api/v1/messages/anonymous
-  return new Promise((resolve) => setTimeout(resolve, 150));
-}
-
-// TODO: connect to backend - Toggle bookmark/save state for a post
-export async function toggleBookmark(postId) {
-  console.log('[API Stub] Toggling bookmark for post ID:', postId);
-  // TODO: connect to backend - POST /api/v1/users/me/bookmarks
-  return new Promise((resolve) => setTimeout(resolve, 100));
+export async function sendOpenChatMessage() {
+  return null;
 }

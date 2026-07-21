@@ -6,6 +6,10 @@ const getProfile = (userId) => {
     return User.findById(userId).select("-password -refreshToken");
 };
 
+const getPublicProfile = (userId) => {
+    return User.findById(userId).select("avatar fullName username bio createdAt");
+};
+
 const updateProfile = (userId, data) => {
 
     return User.findByIdAndUpdate(
@@ -32,6 +36,7 @@ const getMyPosts = async (
             { expiresAt: { $gt: new Date() } },
         ],
     })
+        .populate("author", "fullName username avatar")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit);
@@ -48,6 +53,7 @@ const getMyPolls = async (
         author: userId,
         "poll.question": { $exists: true },
     })
+        .populate("author", "fullName username avatar")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit);
@@ -112,4 +118,5 @@ export {
     countComments,
     countPolls,
     countLikesReceived,
+    getPublicProfile,
 };

@@ -15,6 +15,8 @@ import {
     decrementCommentsCount,
 } from "../repositories/post.repository.js";
 
+import { createNotificationService } from "./notification.service.js";
+
 const createCommentService = async (
     postId,
     userId,
@@ -34,6 +36,16 @@ const createCommentService = async (
     });
 
     await incrementCommentsCount(postId);
+
+    await createNotificationService({
+        recipient: post.author,
+        sender: userId,
+        type: "comment",
+        title: "New Comment",
+        message: "Someone commented on your post.",
+        relatedPost: postId,
+        relatedComment: comment._id
+    });
 
     return comment;
 
@@ -87,7 +99,7 @@ const getCommentsService = async (
 
 const updateCommentService = async (
     commentId,
-    userId,
+    user,
     data
 ) => {
 
@@ -100,7 +112,7 @@ const updateCommentService = async (
 
     if (
         comment.author._id.toString() !==
-        userId.toString()
+        user._id.toString() && user.role !== "admin"
     ) {
         throw new ApiError(
             403,
@@ -119,7 +131,7 @@ const updateCommentService = async (
 
 const deleteCommentService = async (
     commentId,
-    userId
+    user
 ) => {
 
     const comment =
@@ -131,7 +143,7 @@ const deleteCommentService = async (
 
     if (
         comment.author._id.toString() !==
-        userId.toString()
+        user._id.toString() && user.role !== "admin"
     ) {
         throw new ApiError(
             403,
@@ -140,6 +152,18 @@ const deleteCommentService = async (
     }
 
     await deleteComment(commentId);
+
+    if (comment.author._id.toString() !== user._id.toString() && user.role === "admin") {
+        await createNotificationService({
+            recipient: comment.author._id,
+            sender: user._id,
+            type: "admin_deletion",
+            title: "Comment Removed",
+            message: `Your comment was removed by an admin.`,
+            relatedPost: comment.post,
+            relatedComment: null
+        });
+    }
 
     await decrementCommentsCount(
         comment.post

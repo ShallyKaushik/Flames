@@ -8,9 +8,22 @@ import {
 
 import ApiError from "../utils/ApiError.js";
 
+import { createNotificationService } from "./notification.service.js";
+
 const createAnnouncementService = async (data) => {
 
-    return await createAnnouncement(data);
+    const announcement = await createAnnouncement(data);
+
+    await createNotificationService({
+        recipient: null,
+        sender: data.createdBy,
+        type: "announcement",
+        title: "New Announcement",
+        message: data.title,
+        relatedAnnouncement: announcement._id
+    });
+
+    return announcement;
 
 };
 

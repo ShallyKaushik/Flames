@@ -5,9 +5,12 @@ import validate from "../middlewares/validate.middleware.js";
 
 import {
     getProfile,
+    getPublicProfile,
     updateProfile,
     getMyPosts,
     getMyPolls,
+    getPublicPosts,
+    getPublicPolls,
 } from "../controllers/profile.controller.js";
 
 import {
@@ -40,6 +43,24 @@ router.get(
     "/polls",
     verifyJWT,
     getMyPolls
+);
+
+router.get(
+    "/:userId",
+    verifyJWT,
+    getPublicProfile
+);
+
+router.get(
+    "/:userId/posts",
+    verifyJWT,
+    getPublicPosts
+);
+
+router.get(
+    "/:userId/polls",
+    verifyJWT,
+    getPublicPolls
 );
 
 export default router;

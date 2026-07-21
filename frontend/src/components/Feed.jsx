@@ -3,7 +3,7 @@ import { PostCard } from './cards/PostCard';
 import { FoxMascot } from './FoxMascot';
 import { RefreshCw } from 'lucide-react';
 
-export function Feed({ posts, isLoading, onUpdatePost, onOpenComments, onOpenAnonMsg, onResetFilters }) {
+export function Feed({ posts, isLoading, onUpdatePost, onDeletePost, onEditPost, onOpenComments, onOpenAnonMsg, onResetFilters, onNavigateProfile }) {
   if (isLoading) {
     return (
       <div className="px-4 py-3 space-y-4">
@@ -59,8 +59,11 @@ export function Feed({ posts, isLoading, onUpdatePost, onOpenComments, onOpenAno
           key={post.id}
           post={post}
           onUpdatePost={onUpdatePost}
+          onDeletePost={onDeletePost}
+          onEditPost={onEditPost}
           onOpenComments={onOpenComments}
           onOpenAnonMsg={onOpenAnonMsg}
+          onNavigateProfile={onNavigateProfile}
         />
       ))}
     </div>

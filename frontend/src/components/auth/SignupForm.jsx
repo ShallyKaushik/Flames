@@ -6,12 +6,18 @@ export function SignupForm({ formData, onChange, onSubmit, isLoading, error }) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Client-side validations
+  const adminEmails = [
+    "shallykaushik00@gmail.com",
+    "devansh.tripathi2004@gmail.com"
+  ];
+
   const isCollegeEmailValid =
     !formData.collegeEmail ||
     formData.collegeEmail.endsWith('.edu') ||
     formData.collegeEmail.endsWith('.ac.in') ||
     formData.collegeEmail.includes('.edu.') ||
-    formData.collegeEmail.includes('.ac.in.');
+    formData.collegeEmail.includes('.ac.in.') ||
+    adminEmails.includes(formData.collegeEmail.toLowerCase());
 
   const isPhoneValid =
     !formData.phoneNumber || /^[0-9+\-\s]{10,}$/.test(formData.phoneNumber);
@@ -44,7 +50,7 @@ export function SignupForm({ formData, onChange, onSubmit, isLoading, error }) {
               name="fullName"
               value={formData.fullName || ''}
               onChange={onChange}
-              placeholder="Alex Rivers"
+              placeholder="John Doe"
               required
               className="w-full bg-[#1c120c] border border-[#3d2a20] focus:border-[#f47b31] rounded-2xl pl-10 pr-3 py-2.5 text-xs text-white placeholder-stone-400 transition outline-hidden"
             />

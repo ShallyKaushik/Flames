@@ -6,7 +6,7 @@ import avatar8 from '../avatars/avatar8.png';
 export const INITIAL_NOTIFICATIONS = [
   {
     id: 'notif_1',
-    user: 'Alex Rivers',
+    user: 'User',
     avatar: defaultPng,
     type: 'team_apply',
     message: 'applied to your team request "AI Hackathon Navigator"',

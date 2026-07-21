@@ -1,35 +1,44 @@
 import React, { useState } from 'react';
 import { ChevronLeft, Pencil, Check } from 'lucide-react';
-import { AVATARS, DEFAULT_AVATAR } from '../data/avatars';
+import { getAvatarObj, getAvatarUrl } from '../data/avatars';
 import { AvatarSelectorModal } from '../components/AvatarSelectorModal';
+import { updateProfile } from '../services/backendStubs';
 
 export function EditProfileView({ currentUser, onSaveProfile, onBack }) {
   const [selectedAvatar, setSelectedAvatar] = useState(
-    currentUser?.avatarObj || AVATARS[0]
+    getAvatarObj(currentUser?.avatar)
   );
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
-  const [fullName, setFullName] = useState(currentUser?.name || 'Alex Rivers');
-  const [username, setUsername] = useState(currentUser?.username || 'alexrivers');
-  const [bio, setBio] = useState(
-    currentUser?.bio || 'UI/UX Designer\nHackathon Enthusiast\nBuilding Flames 🔥'
-  );
-  const [gender, setGender] = useState(currentUser?.gender || 'Male');
+  const [fullName, setFullName] = useState(currentUser?.fullName || currentUser?.name || '');
+  const [username, setUsername] = useState(currentUser?.username || '');
+  const [bio, setBio] = useState(currentUser?.bio || '');
+  const [gender, setGender] = useState(currentUser?.gender || 'prefer-not-to-say');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const updatedUser = {
       ...currentUser,
-      name: fullName.trim(),
+      fullName: fullName.trim(),
       username: username.trim().replace(/^@/, ''),
       bio: bio.trim(),
       gender,
-      avatarObj: selectedAvatar,
-      avatar: selectedAvatar.url || DEFAULT_AVATAR,
+      avatar: selectedAvatar.id || 'av_4',
     };
-    onSaveProfile(updatedUser);
+    try {
+      const response = await updateProfile({
+        fullName: updatedUser.fullName,
+        username: updatedUser.username,
+        bio: updatedUser.bio,
+        gender: updatedUser.gender,
+        avatar: updatedUser.avatar,
+      });
+      onSaveProfile(response || updatedUser);
+    } catch (error) {
+      console.error('Failed to update profile:', error);
+    }
   };
 
-  const avatarUrl = selectedAvatar?.url || currentUser?.avatar || DEFAULT_AVATAR;
+  const avatarUrl = selectedAvatar?.url || getAvatarUrl(currentUser?.avatar);
 
   return (
     <div className="bg-[#1c120c] text-white min-h-screen pb-28 animate-fade-in px-4 py-4 space-y-5">
@@ -118,9 +127,9 @@ export function EditProfileView({ currentUser, onSaveProfile, onBack }) {
           </label>
           <div className="grid grid-cols-3 gap-2 bg-[#2b1d16] p-1.5 rounded-2xl border border-[#3d2a20]">
             {[
-              { id: 'Male', label: '♂ Male' },
-              { id: 'Female', label: '♀ Female' },
-              { id: 'Other', label: 'Prefer not to say' },
+              { id: 'male', label: '♂ Male' },
+              { id: 'female', label: '♀ Female' },
+              { id: 'prefer-not-to-say', label: 'Prefer not to say' },
             ].map((g) => {
               const isActive = gender === g.id;
               return (
@@ -145,11 +154,11 @@ export function EditProfileView({ currentUser, onSaveProfile, onBack }) {
         <div className="bg-[#231711] p-3 rounded-2xl border border-[#3d2a20] space-y-1.5 text-xs text-stone-400">
           <p>
             <span className="font-semibold text-stone-300">College Email:</span>{' '}
-            {currentUser?.email || 'alex.rivers@jiit.ac.in'}
+            {currentUser?.collegeEmail || currentUser?.email || '—'}
           </p>
           <p>
             <span className="font-semibold text-stone-300">Joined On:</span>{' '}
-            {currentUser?.joinedDate || 'July 2026'}
+            {currentUser?.createdAt ? new Date(currentUser.createdAt).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }) : '—'}
           </p>
         </div>
 

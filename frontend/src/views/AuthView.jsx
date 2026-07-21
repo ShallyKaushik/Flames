@@ -14,8 +14,8 @@ export function AuthView({ onLoginSuccess }) {
 
   // Form Data persistence across tab switches
   const [loginData, setLoginData] = useState({
-    identifier: 'alexrivers',
-    password: 'Password123',
+    identifier: '',
+    password: '',
   });
 
   const [signupData, setSignupData] = useState({
@@ -50,7 +50,7 @@ export function AuthView({ onLoginSuccess }) {
       // TODO: connect to backend - POST /api/v1/auth/login { identifier, password }
       const res = await loginApi(loginData.identifier, loginData.password);
       if (res.success) {
-        onLoginSuccess(res.user);
+        onLoginSuccess(res);
       }
     } catch (err) {
       setError(err.message || 'Login failed. Please check your credentials.');
@@ -92,7 +92,7 @@ export function AuthView({ onLoginSuccess }) {
       // TODO: connect to backend - POST /api/v1/auth/verify-otp { collegeEmail, otp }
       const res = await verifyOtpApi(signupData.collegeEmail, otpCode);
       if (res.success) {
-        onLoginSuccess(res.user);
+        onLoginSuccess(res);
       }
     } catch (err) {
       setError(err.message || 'Invalid OTP code. Please try again.');

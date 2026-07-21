@@ -34,3 +34,35 @@ export const AVATARS = [
   { id: 'av_17', name: 'Avatar 17', url: avatar17 },
   { id: 'av_18', name: 'Avatar 18', url: avatar18 },
 ];
+
+export function getAvatarUrl(avatarId) {
+  if (!avatarId && avatarId !== 0) return DEFAULT_AVATAR;
+  if (typeof avatarId === 'string' && avatarId.startsWith('http')) return avatarId; // Fallback for real URLs
+
+  // Find by exact id if it's a string like 'av_4'
+  let avatar = AVATARS.find(a => a.id === avatarId);
+  if (avatar) return avatar.url;
+
+  // Fallback if it's an integer for backward compatibility
+  const index = parseInt(avatarId, 10);
+  if (!isNaN(index)) {
+    avatar = AVATARS.find(a => a.id === `av_${index}`);
+    if (avatar) return avatar.url;
+  }
+  
+  return DEFAULT_AVATAR;
+}
+
+export function getAvatarObj(avatarId) {
+  if (!avatarId && avatarId !== 0) return AVATARS[0];
+  
+  let avatar = AVATARS.find(a => a.id === avatarId);
+  if (avatar) return avatar;
+  
+  const index = parseInt(avatarId, 10);
+  if (!isNaN(index)) {
+    avatar = AVATARS.find(a => a.id === `av_${index}`);
+    if (avatar) return avatar;
+  }
+  return AVATARS[0];
+}

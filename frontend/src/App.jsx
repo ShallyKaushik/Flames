@@ -17,11 +17,9 @@ import { EditProfileView } from './views/EditProfileView';
 import { ProfileSetupView } from './views/ProfileSetupView';
 import { AuthView } from './views/AuthView';
 
-import { INITIAL_POSTS } from './data/initialPosts';
-import { INITIAL_NOTIFICATIONS } from './data/notifications';
-import { searchContent, applyFilters, fetchNotifications } from './services/backendStubs';
-import { DEMO_CREDENTIALS } from './services/authApi';
+import { searchContent, applyFilters, fetchNotifications, fetchAllPosts, filterByCategory, createPost } from './services/backendStubs';
 import { AVATARS, DEFAULT_AVATAR } from './data/avatars';
+import { disconnectSocket } from './services/socket';
 import { CheckCircle2 } from 'lucide-react';
 
 export default function App() {
@@ -29,34 +27,52 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const saved = localStorage.getItem('flames_user');
-      if (saved) return JSON.parse(saved);
-
-      return {
-        ...DEMO_CREDENTIALS.user,
-        username: 'alexrivers',
-        joinedDate: 'July 2026',
-        bio: 'UI/UX Designer\nHackathon Enthusiast\nBuilding Flames 🔥',
-        gender: 'Male',
-        avatarObj: AVATARS[0],
-        avatar: AVATARS[0].url || DEFAULT_AVATAR,
-        hasCompletedSetup: true,
-        postsCount: 14,
-        commentsCount: 58,
-        likesReceivedCount: 246,
-        pollsCreatedCount: 5,
-      };
-    } catch (e) {
-      return DEMO_CREDENTIALS.user;
-    }
+      const token = localStorage.getItem('flames_accessToken');
+      // If user data exists but no token, clear the stale session
+      if (saved && !token) {
+        localStorage.removeItem('flames_user');
+        localStorage.removeItem('flames_refreshToken');
+        return null;
+      }
+      if (saved && token) return JSON.parse(saved);
+    } catch (e) {}
+    return null;
   });
 
   // Navigation State
   const [activeRoute, setActiveRoute] = useState('home');
+  const [targetProfileId, setTargetProfileId] = useState(null);
 
   // Posts & Notifications State
-  const [posts, setPosts] = useState(INITIAL_POSTS);
-  const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
-  const [isLoading, setIsLoading] = useState(false);
+  const [posts, setPosts] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  React.useEffect(() => {
+    if (currentUser) {
+      setIsLoading(true);
+      fetchAllPosts().then(data => {
+        setPosts(data);
+        setIsLoading(false);
+      }).catch(err => {
+        console.error("Failed to fetch posts", err);
+        setIsLoading(false);
+      });
+
+      fetchNotifications().then(setNotifications).catch(console.error);
+
+      import('./services/socket').then(({ initializeSocket }) => {
+        const socket = initializeSocket();
+        if (socket) {
+          socket.on('notificationReceived', (rawNotif) => {
+            import('./services/backendStubs').then(({ normalizeNotification }) => {
+               setNotifications(prev => [normalizeNotification(rawNotif), ...prev]);
+            });
+          });
+        }
+      });
+    }
+  }, [currentUser]);
 
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
@@ -84,25 +100,23 @@ export default function App() {
   const [anonMsgModalState, setAnonMsgModalState] = useState({ isOpen: false, post: null });
 
   // Auth Handlers
-  const handleLoginSuccess = (user) => {
+  const handleLoginSuccess = (loginResponse) => {
+    const { user, accessToken, refreshToken } = loginResponse;
     const updatedUser = {
       ...user,
-      username: user.username || 'alexrivers',
-      joinedDate: user.joinedDate || 'July 2026',
-      bio: user.bio || 'UI/UX Designer\nHackathon Enthusiast\nBuilding Flames 🔥',
-      gender: user.gender || 'Male',
-      avatarObj: user.avatarObj || AVATARS[0],
-      avatar: user.avatar || AVATARS[0].url || DEFAULT_AVATAR,
-      hasCompletedSetup: user.hasCompletedSetup || false,
-      postsCount: user.postsCount || 14,
-      commentsCount: user.commentsCount || 58,
-      likesReceivedCount: user.likesReceivedCount || 246,
-      pollsCreatedCount: user.pollsCreatedCount || 5,
+      hasCompletedSetup: true, // Assuming setup is done or not needed, adjust if you want ProfileSetupView
     };
     setCurrentUser(updatedUser);
     try {
       localStorage.setItem('flames_user', JSON.stringify(updatedUser));
+      if (accessToken) {
+        localStorage.setItem('flames_accessToken', accessToken);
+      }
+      if (refreshToken) {
+        localStorage.setItem('flames_refreshToken', refreshToken);
+      }
     } catch (e) {}
+    setActiveRoute('home');
   };
 
   const handleCompleteSetup = (updatedUser) => {
@@ -118,12 +132,26 @@ export default function App() {
       localStorage.setItem('flames_user', JSON.stringify(updatedUser));
     } catch (e) {}
     setActiveRoute('profile');
+    setTargetProfileId(null);
+  };
+
+  const handleNavigateProfile = (userId) => {
+    if (userId === currentUser._id || userId === currentUser.id) {
+      setActiveRoute('profile');
+      setTargetProfileId(null);
+    } else {
+      setTargetProfileId(userId);
+      setActiveRoute('profile');
+    }
   };
 
   const handleLogout = () => {
     setCurrentUser(null);
+    disconnectSocket();
     try {
       localStorage.removeItem('flames_user');
+      localStorage.removeItem('flames_accessToken');
+      localStorage.removeItem('flames_refreshToken');
     } catch (e) {}
   };
 
@@ -162,43 +190,67 @@ export default function App() {
 
   // Handlers
   const handleToggleNotifications = async () => {
-    if (!isNotificationsOpen) {
-      // TODO: connect to backend
-      await fetchNotifications();
-    }
     setIsNotificationsOpen(!isNotificationsOpen);
   };
 
-  const handleSearchChange = (query) => {
+  const handleSearchChange = async (query) => {
     setSearchQuery(query);
-    // TODO: connect to backend
-    searchContent(query);
+    if (!query.trim()) {
+      fetchAllPosts().then(setPosts);
+    } else {
+      searchContent(query).then(setPosts);
+    }
   };
 
-  const handleSelectCategory = (categoryId) => {
+  const handleSelectCategory = async (categoryId) => {
     setActiveCategory(categoryId);
+    if (categoryId === 'all') {
+      fetchAllPosts().then(setPosts);
+    } else {
+      filterByCategory(categoryId).then(setPosts);
+    }
   };
 
-  const handleApplyFilters = (filters) => {
+  const handleApplyFilters = async (filters) => {
     setActiveFilters(filters);
     if (filters.category !== 'all') {
       setActiveCategory(filters.category);
     }
-    // TODO: connect to backend
-    applyFilters(filters);
+    applyFilters(filters).then(setPosts);
   };
 
   const handleUpdatePost = (updatedPost) => {
     setPosts((prev) => prev.map((p) => (p.id === updatedPost.id ? updatedPost : p)));
   };
 
-  const handleCreatePost = (newPost) => {
-    setPosts((prev) => [newPost, ...prev]);
+  const handleDeletePost = (postId) => {
+    setPosts((prev) => prev.filter((p) => p.id !== postId));
+  };
+
+  const handleCreatePost = async (newPost) => {
+    // newPost is already normalized from createPost() in CreatePostModal
+    if (newPost) {
+      setPosts((prev) => [newPost, ...prev]);
+    }
+    // Also refresh the whole feed to ensure consistency
+    fetchAllPosts().then(setPosts).catch(() => {});
     setActiveRoute('home');
   };
 
-  const handleClearNotifications = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
+  const handleClearNotifications = async () => {
+    import('./services/backendStubs').then(({ markAllNotificationsRead }) => {
+      markAllNotificationsRead().then(() => {
+        setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
+      });
+    });
+  };
+
+  const handleMarkNotificationRead = async (id) => {
+    import('./services/backendStubs').then(({ markNotificationRead }) => {
+      markNotificationRead(id).then(() => {
+        setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, unread: false } : n));
+      });
+    });
   };
 
   // 1. If user is not logged in, render full Auth Screen
@@ -226,7 +278,10 @@ export default function App() {
         unreadCount={unreadCount}
         onToggleNotifications={handleToggleNotifications}
         onOpenReportModal={() => setIsReportModalOpen(true)}
-        onOpenProfile={() => setActiveRoute('profile')}
+        onOpenProfile={() => {
+          setActiveRoute('profile');
+          setTargetProfileId(null);
+        }}
       />
 
       {/* Success Toast Notification Banner */}
@@ -243,6 +298,7 @@ export default function App() {
         isOpen={isNotificationsOpen}
         onClose={() => setIsNotificationsOpen(false)}
         onClearAll={handleClearNotifications}
+        onMarkRead={handleMarkNotificationRead}
       />
 
       {/* Profile Side Drawer */}
@@ -253,6 +309,7 @@ export default function App() {
         onLogout={handleLogout}
         onNavigate={(route) => {
           setActiveRoute(route);
+          if (route === 'profile') setTargetProfileId(null);
           setIsProfileOpen(false);
         }}
       />
@@ -269,10 +326,13 @@ export default function App() {
             onSelectCategory={handleSelectCategory}
             onOpenFilter={() => setIsFilterOpen(true)}
             hasActiveFilters={hasActiveFilters}
-            onOpenCreateModal={(type = 'text') => setCreateModalState({ isOpen: true, type })}
+            onOpenCreateModal={(type = 'text', editData = null) => setCreateModalState({ isOpen: true, type, editData })}
             onUpdatePost={handleUpdatePost}
+            onDeletePost={handleDeletePost}
+            onEditPost={(post) => setCreateModalState({ isOpen: true, type: post.type, editData: post })}
             onOpenComments={(post) => setCommentsModalState({ isOpen: true, post })}
             onOpenAnonMsg={(post) => setAnonMsgModalState({ isOpen: true, post })}
+            onNavigateProfile={handleNavigateProfile}
             onResetFilters={() => {
               setActiveCategory('all');
               setSearchQuery('');
@@ -296,9 +356,12 @@ export default function App() {
 
         {activeRoute === 'profile' && (
           <ProfileView
-            userPosts={posts}
             currentUser={currentUser}
+            targetUserId={targetProfileId}
             onLogout={handleLogout}
+            onDeletePost={handleDeletePost}
+            onUpdatePost={handleUpdatePost}
+            onEditPost={(post) => setCreateModalState({ isOpen: true, type: post.type, editData: post })}
             onOpenEditProfile={() => setActiveRoute('edit_profile')}
           />
         )}
@@ -315,7 +378,10 @@ export default function App() {
       {/* Fixed Bottom Navigation */}
       <BottomNav
         activeRoute={activeRoute}
-        onNavigate={(route) => setActiveRoute(route)}
+        onNavigate={(route) => {
+          setActiveRoute(route);
+          if (route === 'profile') setTargetProfileId(null);
+        }}
         onOpenCreateModal={(type = 'text') => setCreateModalState({ isOpen: true, type })}
       />
 
@@ -336,7 +402,8 @@ export default function App() {
       <CreatePostModal
         isOpen={createModalState.isOpen}
         initialType={createModalState.type}
-        onClose={() => setCreateModalState({ isOpen: false, type: 'text' })}
+        editData={createModalState.editData}
+        onClose={() => setCreateModalState({ isOpen: false, type: 'text', editData: null })}
         onSubmitPost={handleCreatePost}
       />
 
@@ -344,6 +411,7 @@ export default function App() {
         isOpen={commentsModalState.isOpen}
         post={commentsModalState.post}
         onClose={() => setCommentsModalState({ isOpen: false, post: null })}
+        onNavigateProfile={handleNavigateProfile}
       />
 
       <AnonymousMsgModal

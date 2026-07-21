@@ -57,6 +57,11 @@ const registerUser = async (userData) => {
 
     const otp = generateOTP();
 
+    // Log OTP for development/testing
+    console.log(`\n=========================================`);
+    console.log(`🔑 OTP FOR ${collegeEmail}: ${otp}`);
+    console.log(`=========================================\n`);
+
     await updatePendingUser(collegeEmail, {
 
         fullName,
@@ -93,6 +98,39 @@ const registerUser = async (userData) => {
 
 
 // ==============================
+// Resend OTP
+// ==============================
+
+const resendOTP = async (collegeEmail) => {
+    const pendingUser = await findPendingUserByEmail(collegeEmail);
+    if (!pendingUser) {
+        throw new ApiError(404, "Registration request not found.");
+    }
+    
+    if (pendingUser.otpExpiresAt && (pendingUser.otpExpiresAt.getTime() - Date.now() > 4 * 60 * 1000)) {
+        throw new ApiError(400, "Please wait before requesting a new OTP.");
+    }
+
+    const otp = generateOTP();
+
+    // Log OTP for development/testing
+    console.log(`\n=========================================`);
+    console.log(`🔄 RESEND OTP FOR ${collegeEmail}: ${otp}`);
+    console.log(`=========================================\n`);
+    
+    await updatePendingUser(collegeEmail, {
+        otp,
+        otpExpiresAt: new Date(Date.now() + 5 * 60 * 1000)
+    });
+
+    await sendEmail(
+        collegeEmail,
+        "Flames Email Verification - Resend",
+        otpTemplate(otp)
+    );
+};
+
+// ==============================
 // Verify OTP
 // ==============================
 
@@ -121,6 +159,12 @@ const verifyOTP = async ({ collegeEmail, otp }) => {
 
     console.log("5");
 
+    const adminEmails = [
+        "shallykaushik00@gmail.com",
+        "devansh.tripathi2004@gmail.com"
+    ];
+    const role = adminEmails.includes(pendingUser.collegeEmail) ? "admin" : "student";
+
     const user = await createUser({
         fullName: pendingUser.fullName,
         username: pendingUser.username,
@@ -128,6 +172,7 @@ const verifyOTP = async ({ collegeEmail, otp }) => {
         personalEmail: pendingUser.personalEmail,
         phoneNumber: pendingUser.phoneNumber,
         password: pendingUser.password,
+        role,
         isVerified: true
     });
 
@@ -295,9 +340,8 @@ const refreshAccessToken = async (refreshToken) => {
 export {
 
     registerUser,
-
     verifyOTP,
-
+    resendOTP,
     loginUser,
     logoutUser,
     refreshAccessToken

@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { X, Image as ImageIcon, BarChart3, HelpCircle, EyeOff, Plus, Check, Upload, Trash2 } from 'lucide-react';
 import { CATEGORIES } from '../data/categories';
 import { FoxMascot } from './FoxMascot';
-import { createPost } from '../services/backendStubs';
-import defaultPng from '../avatars/default.png';
+import { createPost, updatePost } from '../services/backendStubs';
 
-export function CreatePostModal({ isOpen, onClose, onSubmitPost, initialType = 'text' }) {
+export function CreatePostModal({ isOpen, onClose, onSubmitPost, initialType = 'text', editData = null }) {
+  const [submitError, setSubmitError] = useState(null);
   const [postType, setPostType] = useState(
     ['text', 'image', 'poll'].includes(initialType) ? initialType : 'text'
   );
@@ -21,7 +21,33 @@ export function CreatePostModal({ isOpen, onClose, onSubmitPost, initialType = '
   const [imagePreview, setImagePreview] = useState(null);
 
   // Poll fields (min 2, max 7)
+  // Poll fields (min 2, max 7)
   const [pollOptions, setPollOptions] = useState(['Option 1', 'Option 2']);
+
+  React.useEffect(() => {
+    if (isOpen && editData) {
+      setPostType(editData.type || 'text');
+      setCategory(editData.category || 'general');
+      setIsAnonymous(!!editData.isAnonymous);
+      setTitle(editData.title || (editData.type === 'poll' ? editData.question : ''));
+      setDescription(editData.content || editData.description || '');
+      if (editData.type === 'image' && editData.image) {
+        setImagePreview(editData.image);
+      }
+      if (editData.type === 'poll' && editData.options) {
+        setPollOptions(editData.options.map(o => o.text));
+      }
+    } else if (isOpen && !editData) {
+      setPostType(['text', 'image', 'poll'].includes(initialType) ? initialType : 'text');
+      setCategory(CATEGORIES[0]?.id || 'general');
+      setIsAnonymous(false);
+      setTitle('');
+      setDescription('');
+      setImageFile(null);
+      setImagePreview(null);
+      setPollOptions(['Option 1', 'Option 2']);
+    }
+  }, [isOpen, editData, initialType]);
 
   if (!isOpen) return null;
 
@@ -63,55 +89,38 @@ export function CreatePostModal({ isOpen, onClose, onSubmitPost, initialType = '
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!title.trim()) return;
-
-    const catObj = CATEGORIES.find((c) => c.id === category);
+    setSubmitError(null);
 
     const postData = {
-      id: `post_${Date.now()}`,
       type: postType,
       category,
-      categoryLabel: catObj ? catObj.label.toUpperCase() : 'GENERAL',
-      timeAgo: 'Just now',
-      author: {
-        name: isAnonymous ? 'Anonymous' : 'Alex Rivers',
-        verified: !isAnonymous,
-        sub: isAnonymous ? 'Campus Voice' : "CS '25",
-        isAnonymous,
-        avatar: isAnonymous ? null : defaultPng,
-      },
+      isAnonymous,
       title: title.trim(),
-      description: description.trim(),
       content: description.trim(),
-      image: imagePreview || null,
-      likesCount: 0,
-      commentsCount: 0,
-      isLiked: false,
-      isBookmarked: false,
     };
 
-    if (postType === 'poll') {
-      postData.question = title.trim();
-      postData.options = pollOptions.map((optText, idx) => ({
-        id: `opt_${idx + 1}`,
-        text: optText.trim() || `Option ${idx + 1}`,
-        count: 0,
-        percentage: Math.round(100 / pollOptions.length),
-      }));
-      postData.totalVotes = 0;
-      postData.userVotedOptionId = null;
+    if (postType === 'image' && imageFile) {
+      postData.image = imageFile;
     }
 
-    // TODO: connect to backend
-    await createPost(postData);
-    onSubmitPost(postData);
-    onClose();
+    if (postType === 'poll') {
+      postData.options = pollOptions.map(o => ({ text: o.trim() || 'Option' }));
+    }
 
-    // Reset Form
-    setTitle('');
-    setDescription('');
-    setImageFile(null);
-    setImagePreview(null);
-    setPollOptions(['Option 1', 'Option 2']);
+    try {
+      let resultPost;
+      if (editData) {
+        resultPost = await updatePost(editData.id, postData);
+      } else {
+        resultPost = await createPost(postData);
+      }
+      onSubmitPost(resultPost);
+      onClose();
+      // Reset Form handled by useEffect on next open
+    } catch (err) {
+      const msg = err.response?.data?.message || err.response?.data?.errors?.[0]?.msg || err.message || 'Failed to save post';
+      setSubmitError(msg);
+    }
   };
 
   return (
@@ -122,8 +131,12 @@ export function CreatePostModal({ isOpen, onClose, onSubmitPost, initialType = '
           <div className="flex items-center gap-2">
             <FoxMascot variant={isAnonymous ? 'comingsoon' : 'generaluse'} className="w-8 h-8" />
             <div>
-              <h3 className="text-sm font-extrabold text-white">Create Campus Post</h3>
-              <p className="text-[11px] text-stone-400">Share with verified students</p>
+              <h2 className="text-xl font-extrabold text-white leading-tight">
+                {editData ? 'Edit Post' : 'Create Post'}
+              </h2>
+              <p className="text-xs font-bold text-stone-400">
+                {editData ? 'Update your expression' : 'Express yourself on campus'}
+              </p>
             </div>
           </div>
           <button
@@ -140,30 +153,22 @@ export function CreatePostModal({ isOpen, onClose, onSubmitPost, initialType = '
             <label className="text-[11px] font-bold text-stone-400 uppercase tracking-wider block mb-1.5">
               Post Type
             </label>
-            <div className="grid grid-cols-3 gap-1.5 bg-[#1c120c] p-1 rounded-2xl border border-[#3d2a20]">
-              {[
-                { id: 'text', label: 'Text Post', icon: HelpCircle },
-                { id: 'image', label: 'Image Post', icon: ImageIcon },
-                { id: 'poll', label: 'Poll Post', icon: BarChart3 },
-              ].map((type) => {
-                const IconComponent = type.icon;
-                const isActive = postType === type.id;
-                return (
-                  <button
-                    key={type.id}
-                    type="button"
-                    onClick={() => setPostType(type.id)}
-                    className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition ${
-                      isActive
-                        ? 'bg-[#f47b31] text-white shadow-sm'
-                        : 'text-stone-400 hover:text-white hover:bg-[#2b1d16]'
-                    }`}
-                  >
-                    <IconComponent className="w-3.5 h-3.5" />
-                    <span>{type.label}</span>
-                  </button>
-                );
-              })}
+            <div className="flex gap-1 bg-[#1c120c] p-1 rounded-2xl border border-[#3d2a20]">
+              {['text', 'image', 'poll'].map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  disabled={!!editData}
+                  onClick={() => setPostType(type)}
+                  className={`flex-1 py-2 text-xs font-bold rounded-xl capitalize transition cursor-pointer ${
+                    postType === type
+                      ? 'bg-[#f47b31] text-white shadow-sm'
+                      : 'text-stone-400 hover:text-white hover:bg-[#2b1d16]'
+                  } ${editData ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {type} Post
+                </button>
+              ))}
             </div>
           </div>
 
@@ -225,19 +230,21 @@ export function CreatePostModal({ isOpen, onClose, onSubmitPost, initialType = '
           </div>
 
           {/* Description Field */}
-          <div>
-            <label className="text-[11px] font-bold text-stone-400 uppercase tracking-wider block mb-1">
-              {postType === 'poll' ? 'Poll Description (Optional)' : 'Description'}
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Provide details or context..."
-              rows={3}
-              required={postType !== 'poll'}
-              className="w-full bg-[#1c120c] border border-[#3d2a20] rounded-xl px-3.5 py-2 text-xs text-white placeholder-stone-400 focus:border-[#f47b31] focus:outline-hidden resize-none"
-            />
-          </div>
+          {postType !== 'poll' && (
+            <div>
+              <label className="text-[11px] font-bold text-stone-400 uppercase tracking-wider block mb-1">
+                Description
+              </label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Provide details or context..."
+                rows={3}
+                required
+                className="w-full bg-[#1c120c] border border-[#3d2a20] rounded-xl px-3.5 py-2 text-xs text-white placeholder-stone-400 focus:border-[#f47b31] focus:outline-hidden resize-none"
+              />
+            </div>
+          )}
 
           {/* Image Upload Field */}
           {postType === 'image' && (
@@ -249,9 +256,7 @@ export function CreatePostModal({ isOpen, onClose, onSubmitPost, initialType = '
                 <label className="w-full border-2 border-dashed border-[#3d2a20] hover:border-[#f47b31] bg-[#1c120c] rounded-2xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer transition">
                   <Upload className="w-6 h-6 text-[#f47b31]" />
                   <span className="text-xs font-bold text-white">Choose Image File</span>
-                  <span className="text-[10px] text-stone-400">
-                    Supports JPG, JPEG, PNG, WEBP, GIF
-                  </span>
+                  <p className="text-[10px] text-stone-400 mt-1">PNG, JPG up to 5MB</p>
                   <input
                     type="file"
                     accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
@@ -266,16 +271,19 @@ export function CreatePostModal({ isOpen, onClose, onSubmitPost, initialType = '
                     alt="Upload Preview"
                     className="w-full h-full object-cover"
                   />
-                  <button
-                    type="button"
-                    onClick={handleRemoveImage}
-                    className="absolute top-2 right-2 bg-black/70 hover:bg-red-600 text-white p-1.5 rounded-full transition"
-                    title="Remove image"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {!editData && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="absolute top-2 right-2 bg-black/70 hover:bg-red-600 text-white p-1.5 rounded-full transition"
+                      title="Remove image"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               )}
+              {editData && editData.type === 'image' && <p className="text-[10px] text-red-400 mt-1">Images cannot be updated.</p>}
             </div>
           )}
 
@@ -324,6 +332,13 @@ export function CreatePostModal({ isOpen, onClose, onSubmitPost, initialType = '
             </div>
           )}
 
+          {/* Error Message */}
+          {submitError && (
+            <div className="bg-red-900/40 border border-red-600/40 text-red-300 text-xs px-3 py-2 rounded-xl">
+              {submitError}
+            </div>
+          )}
+
           {/* Actions */}
           <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#3d2a20]">
             <button
@@ -335,9 +350,14 @@ export function CreatePostModal({ isOpen, onClose, onSubmitPost, initialType = '
             </button>
             <button
               type="submit"
-              className="py-2.5 px-6 rounded-xl bg-[#f47b31] hover:bg-[#e0661c] text-white text-xs font-bold shadow-md flex items-center gap-1.5 transition"
+              disabled={!title.trim()}
+              className="py-2.5 px-6 rounded-xl bg-[#f47b31] hover:bg-[#e0661c] disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold shadow-md flex items-center gap-1.5 transition"
             >
-              <Check className="w-4 h-4" /> Post to Campus
+              {editData ? 'Save Changes' : (
+                <>
+                  <Check className="w-4 h-4" /> Post to Campus
+                </>
+              )}
             </button>
           </div>
         </form>
@@ -345,3 +365,4 @@ export function CreatePostModal({ isOpen, onClose, onSubmitPost, initialType = '
     </div>
   );
 }
+

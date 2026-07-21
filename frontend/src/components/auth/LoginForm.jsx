@@ -28,7 +28,7 @@ export function LoginForm({ formData, onChange, onSubmit, isLoading, error }) {
             name="identifier"
             value={formData.identifier || ''}
             onChange={onChange}
-            placeholder="alex.rivers@jiit.ac.in or alexrivers"
+            placeholder="john.doe@jiit.ac.in or johndoe"
             required
             className="w-full bg-[#1c120c] border border-[#3d2a20] focus:border-[#f47b31] rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-stone-400 transition outline-hidden"
           />
@@ -100,12 +100,6 @@ export function LoginForm({ formData, onChange, onSubmit, isLoading, error }) {
         )}
       </button>
 
-      {/* Demo Credentials Hint */}
-      <div className="bg-[#231711] p-3 rounded-2xl border border-[#3d2a20] text-[11px] text-stone-400 space-y-0.5 text-center mt-2">
-        <p className="font-semibold text-stone-300">Demo Credentials:</p>
-        <p><span className="text-[#f47b31]">Email/Username:</span> alexrivers or alex.rivers@jiit.ac.in</p>
-        <p><span className="text-[#f47b31]">Password:</span> Password123</p>
-      </div>
     </form>
   );
 }

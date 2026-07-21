@@ -7,6 +7,7 @@ import {
     countComments,
     countPolls,
     countLikesReceived,
+    getPublicProfile,
 } from "../repositories/profile.repository.js";
 
 import ApiError from "../utils/ApiError.js";
@@ -46,6 +47,36 @@ const getProfileService = async (userId) => {
 
     };
 
+};
+
+const getPublicProfileService = async (userId) => {
+    const user = await getPublicProfile(userId);
+
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    const [
+        posts,
+        comments,
+        polls,
+        likesReceived,
+    ] = await Promise.all([
+        countPosts(userId),
+        countComments(userId),
+        countPolls(userId),
+        countLikesReceived(userId),
+    ]);
+
+    return {
+        user,
+        stats: {
+            posts,
+            comments,
+            polls,
+            likesReceived,
+        },
+    };
 };
 
 const updateProfileService = async (
@@ -96,6 +127,7 @@ const getMyPollsService = async (
 
 export {
     getProfileService,
+    getPublicProfileService,
     updateProfileService,
     getMyPostsService,
     getMyPollsService,

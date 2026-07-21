@@ -15,9 +15,12 @@ export function HomeView({
   hasActiveFilters,
   onOpenCreateModal,
   onUpdatePost,
+  onDeletePost,
+  onEditPost,
   onOpenComments,
   onOpenAnonMsg,
   onResetFilters,
+  onNavigateProfile,
 }) {
   return (
     <div className="pb-24 animate-fade-in">
@@ -43,9 +46,12 @@ export function HomeView({
         posts={posts}
         isLoading={isLoading}
         onUpdatePost={onUpdatePost}
+        onDeletePost={onDeletePost}
+        onEditPost={onEditPost}
         onOpenComments={onOpenComments}
         onOpenAnonMsg={onOpenAnonMsg}
         onResetFilters={onResetFilters}
+        onNavigateProfile={onNavigateProfile}
       />
     </div>
   );

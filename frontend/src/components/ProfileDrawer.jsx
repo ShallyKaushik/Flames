@@ -1,19 +1,19 @@
 import React from 'react';
 import { User, ShieldCheck, Bookmark, Settings, LogOut, X, Sparkles } from 'lucide-react';
 import defaultPng from '../avatars/default.png';
+import { getAvatarUrl } from '../data/avatars';
 
 export function ProfileDrawer({ isOpen, onClose, onNavigate, currentUser, onLogout }) {
   if (!isOpen) return null;
 
   const user = currentUser || {
-    name: 'Alex Rivers',
-    major: 'Computer Science',
-    graduationYear: '2025',
-    email: 'alex.rivers@campus.edu',
-    avatar: defaultPng,
+    fullName: '',
+    username: '',
+    email: '',
+    avatar: 0,
   };
 
-  const userAvatar = user.avatarObj?.url || user.avatar || defaultPng;
+  const userAvatar = getAvatarUrl(user.avatar);
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-xs animate-fade-in">
@@ -42,10 +42,9 @@ export function ProfileDrawer({ isOpen, onClose, onNavigate, currentUser, onLogo
             />
             <div>
               <h3 className="text-sm font-extrabold text-white flex items-center gap-1">
-                {user.name} <ShieldCheck className="w-4 h-4 text-sky-400 fill-sky-400/20" />
+                {user.fullName || user.username || '—'} <ShieldCheck className="w-4 h-4 text-sky-400 fill-sky-400/20" />
               </h3>
-              <p className="text-xs text-[#f47b31] font-medium">{user.major || 'CS Major'} • Class of '{user.graduationYear || '25'}</p>
-              <p className="text-[11px] text-stone-400 truncate max-w-[160px]">{user.email}</p>
+              <p className="text-[11px] text-stone-400 truncate max-w-[160px]">{user.email || '—'}</p>
             </div>
           </div>
 

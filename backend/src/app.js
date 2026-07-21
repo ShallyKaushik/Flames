@@ -11,6 +11,7 @@ import profileRoutes from "./routes/profile.routes.js";
 import announcementRoutes from "./routes/announcement.routes.js";
 
 import discussionRoutes from "./routes/discussion.routes.js";
+import notificationRoutes from "./routes/notification.routes.js";
 
 
 const app = express();
@@ -45,6 +46,11 @@ app.use(
 app.use(
     "/api/v1/discussion",
     discussionRoutes
+);
+
+app.use(
+    "/api/v1/notifications",
+    notificationRoutes
 );
 
 app.get("/", (req, res) => {

@@ -1,8 +1,9 @@
 import React from 'react';
 import { Heart, MessageSquare, MoreHorizontal, CheckCircle2, UserPlus, Check } from 'lucide-react';
 import { toggleLike, joinTeam, openComments } from '../../services/backendStubs';
+import { getAvatarUrl } from '../../data/avatars';
 
-export function TeamRequestCard({ post, onUpdatePost, onOpenComments }) {
+export function TeamRequestCard({ post, onUpdatePost, onOpenComments, onNavigateProfile }) {
   const handleLike = () => {
     // TODO: connect to backend
     toggleLike(post.id);
@@ -30,7 +31,7 @@ export function TeamRequestCard({ post, onUpdatePost, onOpenComments }) {
           {post.categoryLabel || 'TEAM REQUEST'}
         </span>
         <div className="flex items-center gap-2 text-stone-500 text-xs">
-          <span>{post.timeAgo}</span>
+          <span>{post.timeAgo}{post.isEdited ? ' • Edited' : ''}</span>
           <button className="p-1 hover:bg-stone-200 rounded-full transition" aria-label="Post options">
             <MoreHorizontal className="w-4 h-4" />
           </button>
@@ -40,11 +41,15 @@ export function TeamRequestCard({ post, onUpdatePost, onOpenComments }) {
       {/* Author Header */}
       <div className="flex items-center gap-3">
         <img
-          src={post.author.avatar}
+          src={getAvatarUrl(post.author.avatar)}
           alt={post.author.name}
-          className="w-10 h-10 rounded-full object-cover border-2 border-[#f47b31]"
+          className="w-10 h-10 rounded-full object-cover border-2 border-[#f47b31] cursor-pointer"
+          onClick={() => onNavigateProfile && onNavigateProfile(post.author._id || post.author.id)}
         />
-        <div>
+        <div 
+          className="flex-1 min-w-0 cursor-pointer"
+          onClick={() => onNavigateProfile && onNavigateProfile(post.author._id || post.author.id)}
+        >
           <h4 className="text-sm font-extrabold flex items-center gap-1">
             {post.author.name}
             {post.author.verified && (

@@ -13,6 +13,8 @@ import {
     decrementLikesCount,
 } from "../repositories/post.repository.js";
 
+import { createNotificationService } from "./notification.service.js";
+
 const likePostService = async (postId, userId) => {
 
     const post = await getPostById(postId);
@@ -33,6 +35,15 @@ const likePostService = async (postId, userId) => {
     });
 
     await incrementLikesCount(postId);
+
+    await createNotificationService({
+        recipient: post.author,
+        sender: userId,
+        type: "like",
+        title: "New Like",
+        message: "Someone liked your post.",
+        relatedPost: postId
+    });
 
     return;
 };

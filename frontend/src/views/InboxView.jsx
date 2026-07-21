@@ -1,85 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, EyeOff } from 'lucide-react';
 import { FoxMascot } from '../components/FoxMascot';
-import { sendOpenChatMessage, fetchOnlineUserCount } from '../services/backendStubs';
+import { fetchOnlineUserCount } from '../services/backendStubs';
+import { initializeSocket, disconnectSocket, getSocket } from '../services/socket';
+import api from '../services/api';
 import defaultPng from '../avatars/default.png';
-import avatar4 from '../avatars/avatar4.png';
-import avatar6 from '../avatars/avatar6.png';
-import avatar7 from '../avatars/avatar7.png';
+import { getAvatarUrl } from '../data/avatars';
 
 export function InboxView({ currentUser }) {
-  const userName = currentUser?.name || 'Alex Rivers';
+  const userName = currentUser?.username || currentUser?.fullName || currentUser?.name || 'User';
   const userSub = `${currentUser?.major ? currentUser.major.substring(0, 2) : 'CS'} '25`;
 
   const [onlineCount, setOnlineCount] = useState(null);
-  const [messages, setMessages] = useState([
-    {
-      id: 'msg_1',
-      author: 'Priya Sharma',
-      verified: true,
-      sub: 'Robotics Lead',
-      isAnonymous: false,
-      isMe: false,
-      text: 'Free pizza workshop tomorrow at 5 PM in Lab 304! Everyone is welcome.',
-      time: '5:18 PM',
-      avatar: avatar6,
-    },
-    {
-      id: 'msg_2',
-      author: 'Anonymous',
-      verified: false,
-      sub: 'Campus Voice',
-      isAnonymous: true,
-      isMe: false,
-      text: 'Finals schedule for CS 301 is officially posted on the student portal!',
-      time: '5:20 PM',
-      avatar: null,
-    },
-    {
-      id: 'msg_3',
-      author: 'Devon Vance',
-      verified: true,
-      sub: 'Physics TA',
-      isAnonymous: false,
-      isMe: false,
-      text: 'Physics 301 review notes uploaded to the shared folder.',
-      time: '5:22 PM',
-      avatar: avatar4,
-    },
-    {
-      id: 'msg_4',
-      author: userName,
-      verified: true,
-      sub: userSub,
-      isAnonymous: false,
-      isMe: true,
-      text: 'Anyone down for a late night study session at the main cafeteria?',
-      time: '5:24 PM',
-      avatar: currentUser?.avatar || defaultPng,
-    },
-    {
-      id: 'msg_5',
-      author: 'Maya Lin',
-      verified: true,
-      sub: "Data Science '26",
-      isAnonymous: false,
-      isMe: false,
-      text: 'Count me in! Finishing up lab report now.',
-      time: '5:25 PM',
-      avatar: avatar7,
-    },
-    {
-      id: 'msg_6',
-      author: 'Anonymous',
-      verified: false,
-      sub: 'Campus Voice',
-      isAnonymous: true,
-      isMe: true,
-      text: 'Is the 24/7 library extension approved for finals week yet?',
-      time: '5:26 PM',
-      avatar: null,
-    },
-  ]);
+  const [messages, setMessages] = useState([]);
 
   const [inputMessage, setInputMessage] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(false);
@@ -87,13 +20,56 @@ export function InboxView({ currentUser }) {
   const chatEndRef = useRef(null);
 
   useEffect(() => {
-    // TODO: connect to backend - Fetch real-time active user count & subscribe to presence
     fetchOnlineUserCount().then((count) => {
       setOnlineCount(count);
     }).catch(() => {
       setOnlineCount(null);
     });
-  }, []);
+
+    const fetchMessages = async () => {
+      try {
+        const response = await api.get('/discussion/messages');
+        const msgs = response.data.message || response.data.data || [];
+        setMessages(msgs.map(formatBackendMessage));
+      } catch (err) {
+        console.error('Failed to load old messages:', err);
+      }
+    };
+    fetchMessages();
+
+    const socket = initializeSocket();
+    if (socket) {
+      socket.emit('joinDiscussion');
+      socket.on('messageReceived', (msg) => {
+        setMessages((prev) => [...prev, formatBackendMessage(msg)]);
+      });
+      socket.on('messageDeleted', ({ messageId }) => {
+        setMessages((prev) => prev.filter(m => m.id !== messageId));
+      });
+    }
+
+    return () => {
+      if (socket) {
+        socket.off('messageReceived');
+        socket.off('messageDeleted');
+      }
+    };
+  }, [currentUser]);
+
+  const formatBackendMessage = (msg) => {
+    return {
+      id: msg._id,
+      author: msg.sender?.fullName || msg.sender?.username || 'Unknown',
+      verified: !msg.isAnonymous,
+      sub: msg.isAnonymous ? 'Campus Voice' : 'User',
+      isAnonymous: msg.isAnonymous,
+      isMe: msg.sender?._id === currentUser?._id || msg.sender?._id === currentUser?.id || msg.sender?.username === currentUser?.username,
+      text: msg.message,
+      time: new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      avatar: msg.isAnonymous ? null : getAvatarUrl(msg.sender?.avatar),
+      isEdited: !!msg.edited,
+    };
+  };
 
   const scrollToBottom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -108,28 +84,15 @@ export function InboxView({ currentUser }) {
     if (!inputMessage.trim()) return;
 
     setIsPosting(true);
+    
+    const socket = getSocket();
+    if (socket) {
+      socket.emit('sendMessage', {
+        message: inputMessage.trim(),
+        isAnonymous: isAnonymous
+      });
+    }
 
-    const now = new Date();
-    const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-    const newMessage = {
-      id: `msg_${Date.now()}`,
-      author: isAnonymous ? 'Anonymous' : userName,
-      verified: !isAnonymous,
-      sub: isAnonymous ? 'Campus Voice' : userSub,
-      isAnonymous,
-      isMe: true,
-      text: inputMessage.trim(),
-      time: timeString,
-      avatar: isAnonymous
-        ? null
-        : (currentUser?.avatar || defaultPng),
-    };
-
-    // TODO: connect to backend
-    await sendOpenChatMessage(newMessage);
-
-    setMessages((prev) => [...prev, newMessage]);
     setInputMessage('');
     setIsPosting(false);
   };
@@ -214,7 +177,7 @@ export function InboxView({ currentUser }) {
 
                 {/* Subtle Timestamp in bottom right */}
                 <div className="text-[10px] text-stone-400 font-medium text-right pt-0.5 leading-none">
-                  {msg.time}
+                  {msg.time}{msg.isEdited ? ' • Edited' : ''}
                 </div>
               </div>
 

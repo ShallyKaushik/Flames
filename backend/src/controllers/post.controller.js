@@ -82,7 +82,7 @@ const updatePost = asyncHandler(async (req, res) => {
 
     const post = await updatePostService(
         req.params.postId,
-        req.user._id,
+        req.user,
         req.body
     );
 
@@ -100,7 +100,7 @@ const deletePost = asyncHandler(async (req, res) => {
 
     await deletePostService(
         req.params.postId,
-        req.user._id
+        req.user
     );
 
     return res.status(200).json(

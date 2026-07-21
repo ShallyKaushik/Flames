@@ -3,6 +3,7 @@ import ApiResponse from "../utils/ApiResponse.js";
 
 import {
     getProfileService,
+    getPublicProfileService,
     updateProfileService,
     getMyPostsService,
     getMyPollsService,
@@ -18,6 +19,21 @@ const getProfile = asyncHandler(async (req, res) => {
             200,
             profile,
             "Profile fetched successfully"
+        )
+    );
+
+});
+
+const getPublicProfile = asyncHandler(async (req, res) => {
+
+    const profile =
+        await getPublicProfileService(req.params.userId);
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            profile,
+            "Public profile fetched successfully"
         )
     );
 
@@ -79,9 +95,34 @@ const getMyPolls = asyncHandler(async (req, res) => {
 
 });
 
+const getPublicPosts = asyncHandler(async (req, res) => {
+    const posts = await getMyPostsService(
+        req.params.userId,
+        req.query.page,
+        req.query.limit
+    );
+    return res.status(200).json(
+        new ApiResponse(200, posts, "Public posts fetched")
+    );
+});
+
+const getPublicPolls = asyncHandler(async (req, res) => {
+    const polls = await getMyPollsService(
+        req.params.userId,
+        req.query.page,
+        req.query.limit
+    );
+    return res.status(200).json(
+        new ApiResponse(200, polls, "Public polls fetched")
+    );
+});
+
 export {
     getProfile,
+    getPublicProfile,
     updateProfile,
     getMyPosts,
     getMyPolls,
+    getPublicPosts,
+    getPublicPolls,
 };
