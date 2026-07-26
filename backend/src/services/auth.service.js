@@ -3,6 +3,7 @@ import ApiError from "../utils/ApiError.js";
 import jwt from "jsonwebtoken";
 import {
     findUserByEmail,
+    findUserByUsername,
     createUser,
     updateRefreshToken,
     removeRefreshToken,
