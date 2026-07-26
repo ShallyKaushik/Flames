@@ -50,30 +50,14 @@ export function ProfileDrawer({ isOpen, onClose, onNavigate, currentUser, onLogo
 
           {/* Navigation Links */}
           <div className="space-y-1">
-            <button
-              onClick={() => { onNavigate('profile'); onClose(); }}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-stone-200 hover:bg-[#34241c] hover:text-white font-medium text-sm transition cursor-pointer"
-            >
-              <User className="w-4 h-4 text-[#f47b31]" /> View Full Profile
-            </button>
-            <button
-              onClick={() => { onNavigate('home'); onClose(); }}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-stone-200 hover:bg-[#34241c] hover:text-white font-medium text-sm transition cursor-pointer"
-            >
-              <Bookmark className="w-4 h-4 text-[#f47b31]" /> Saved Posts & Bookmarks
-            </button>
-            <button
-              onClick={() => { onNavigate('discover'); onClose(); }}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-stone-200 hover:bg-[#34241c] hover:text-white font-medium text-sm transition cursor-pointer"
-            >
-              <Sparkles className="w-4 h-4 text-[#f47b31]" /> Campus Channels
-            </button>
-            <button
-              onClick={() => { alert('Account Settings clicked!'); onClose(); }}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-stone-200 hover:bg-[#34241c] hover:text-white font-medium text-sm transition cursor-pointer"
-            >
-              <Settings className="w-4 h-4 text-[#f47b31]" /> Account & Privacy
-            </button>
+            {currentUser?.role === 'admin' && (
+              <button
+                onClick={() => onNavigate('admin')}
+                className="w-full text-left px-4 py-3 flex items-center gap-3 text-emerald-400 font-extrabold hover:bg-emerald-900/20 transition-colors"
+              >
+                <ShieldCheck className="w-5 h-5" /> Admin Dashboard
+              </button>
+            )}
           </div>
         </div>
 

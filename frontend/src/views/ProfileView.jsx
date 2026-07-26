@@ -217,12 +217,25 @@ export function ProfileView({ currentUser, targetUserId, onLogout, onOpenEditPro
       {!isPublicView && (
         <button
           onClick={onOpenEditProfile}
-          className="w-full bg-[#2b1d16] hover:bg-[#34241c] border border-[#3d2a20] p-4 rounded-3xl flex items-center justify-between text-xs font-extrabold text-white transition cursor-pointer shadow-xs"
+          className="w-full bg-[#2b1d16] hover:bg-[#34241c] border border-[#3d2a20] p-4 rounded-3xl flex items-center justify-between text-xs font-extrabold text-white transition cursor-pointer shadow-xs mb-2"
         >
           <span className="flex items-center gap-2">
             <Pencil className="w-4 h-4 text-[#f47b31]" /> Edit Profile
           </span>
           <ChevronRight className="w-4 h-4 text-stone-400" />
+        </button>
+      )}
+
+      {/* Admin Dashboard Button Card */}
+      {!isPublicView && currentUser?.role === 'admin' && (
+        <button
+          onClick={onOpenAdminDashboard}
+          className="w-full bg-[#1c2e26] hover:bg-[#1a382c] border border-emerald-900/60 p-4 rounded-3xl flex items-center justify-between text-xs font-extrabold text-emerald-300 transition cursor-pointer shadow-xs mb-2"
+        >
+          <span className="flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-emerald-400" /> Admin Dashboard
+          </span>
+          <ChevronRight className="w-4 h-4 text-emerald-700" />
         </button>
       )}
 

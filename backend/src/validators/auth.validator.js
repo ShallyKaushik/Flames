@@ -1,57 +1,19 @@
 import { body } from "express-validator";
 
-export const registerValidator = [
-
-    body("fullName")
-        .trim()
+export const googleLoginValidator = [
+    body("idToken")
         .notEmpty()
-        .withMessage("Full Name is required"),
-
-    body("username")
-        .trim()
-        .isLength({ min: 4 })
-        .withMessage("Username must be at least 4 characters"),
-
-    body("collegeEmail")
-        .isEmail()
-        .withMessage("Invalid College Email"),
-
-    body("password")
-        .isLength({ min: 8 })
-        .withMessage("Password must contain at least 8 characters")
-
+        .withMessage("ID Token is required")
 ];
 
-export const updatePendingUser = (email, data) =>
-    PendingUser.findOneAndUpdate(
-        { collegeEmail: email },
-        data,
-        { new: true, upsert: true }
-    );
-
-export const createUser = (data) =>
-    User.create(data);
-
-export const verifyOTPValidator = [
-
-    body("collegeEmail")
-        .isEmail()
-        .withMessage("Valid email required"),
-
-    body("otp")
-        .isLength({ min: 6, max: 6 })
-        .withMessage("OTP must be 6 digits")
-
-];
-
-export const loginValidator = [
-
-    body("collegeEmail")
-        .isEmail()
-        .withMessage("Valid email is required"),
-
-    body("password")
-        .notEmpty()
-        .withMessage("Password is required")
-
+export const completeProfileValidator = [
+    body("idToken").notEmpty().withMessage("ID Token is required"),
+    body("username").notEmpty().withMessage("Username is required")
+        .matches(/^[a-z0-9_]{3,20}$/).withMessage("Username must be 3-20 characters, lowercase alphanumeric or underscore"),
+    body("phoneNumber").notEmpty().withMessage("Phone number is required"),
+    body("fullName").notEmpty().withMessage("Full name is required"),
+    body("avatar").optional().isString(),
+    body("personalEmail").optional().isEmail(),
+    body("bio").optional().isString().isLength({ max: 500 }),
+    body("gender").optional().isIn(["male", "female", "other", "prefer_not_to_say"])
 ];

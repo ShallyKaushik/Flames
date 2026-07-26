@@ -1,6 +1,4 @@
 import User from "../models/user.model.js";
-import PendingUser from "../models/pendingUser.model.js";
-
 // =========================
 // User Queries
 // =========================
@@ -43,33 +41,6 @@ const saveRefreshToken = (userId, refreshToken) =>
 
 };
 
-// =========================
-// Pending User Queries
-// =========================
-
-const findPendingUserByEmail = (email) =>
-    PendingUser.findOne({
-        collegeEmail: email,
-    });
-
-const createPendingUser = (data) =>
-    PendingUser.create(data);
-
-const updatePendingUser = (email, data) =>
-    PendingUser.findOneAndUpdate(
-        { collegeEmail: email },
-        data,
-        {
-            new: true,
-            upsert: true,
-        }
-    );
-
-const deletePendingUser = (email) =>
-    PendingUser.deleteOne({
-        collegeEmail: email,
-    });
-
 
 const removeRefreshToken = (userId) => {
 
@@ -106,10 +77,6 @@ export {
     findUserByUsername,
     createUser,
     saveRefreshToken,
-    findPendingUserByEmail,
-    createPendingUser,
-    updatePendingUser,
-    deletePendingUser,
     updateRefreshToken,
     removeRefreshToken,
     findUserById

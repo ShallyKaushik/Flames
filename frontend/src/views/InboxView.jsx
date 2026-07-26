@@ -29,7 +29,7 @@ export function InboxView({ currentUser }) {
     const fetchMessages = async () => {
       try {
         const response = await api.get('/discussion/messages');
-        const msgs = response.data.message || response.data.data || [];
+        const msgs = response.data.data || (Array.isArray(response.data.message) ? response.data.message : []);
         setMessages(msgs.map(formatBackendMessage));
       } catch (err) {
         console.error('Failed to load old messages:', err);

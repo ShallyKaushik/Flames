@@ -1,133 +1,60 @@
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import {
-    registerUser,
-    loginUser,
-    verifyOTP as verifyOTPService,
-    resendOTP as resendOTPService,
+    googleLogin as googleLoginService,
     logoutUser,
-    refreshAccessToken
+    refreshAccessToken,
+    completeProfileService,
+    checkUsernameService
 } from "../services/auth.service.js";
 
-const register = asyncHandler(async (req, res) => {
-
-    await registerUser(req.body);
-
+const googleLogin = asyncHandler(async (req, res) => {
+    const data = await googleLoginService(req.body.idToken);
     return res.status(200).json(
-        new ApiResponse(
-            200,
-            null,
-            "OTP sent successfully"
-        )
+        new ApiResponse(200, data, "Login successful")
     );
-
-});
-
-const verifyOTP = asyncHandler(async (req, res) => {
-
-    const data =
-        await verifyOTPService(req.body);
-
-    return res.status(201).json(
-
-        new ApiResponse(
-
-            201,
-
-            data,
-
-            "Account created successfully"
-
-        )
-
-    );
-
-});
-
-const resendOTP = asyncHandler(async (req, res) => {
-    await resendOTPService(req.body.collegeEmail);
-    return res.status(200).json(
-        new ApiResponse(200, null, "OTP resent successfully")
-    );
-});
-
-const login = asyncHandler(async (req, res) => {
-
-    const data =
-        await loginUser(req.body);
-
-    return res.status(200).json(
-
-        new ApiResponse(
-
-            200,
-
-            data,
-
-            "Login successful"
-
-        )
-
-    );
-
 });
 
 const getCurrentUser = asyncHandler(async (req, res) => {
-
     return res.status(200).json(
-
-        new ApiResponse(
-            200,
-            req.user,
-            "Current user fetched successfully"
-        )
-
+        new ApiResponse(200, req.user, "Current user fetched successfully")
     );
-
 });
 
 const logout = asyncHandler(async (req, res) => {
-
     await logoutUser(req.user._id);
-
     return res.status(200).json(
-
-        new ApiResponse(
-
-            200,
-
-            null,
-
-            "Logout successful"
-
-        )
-
+        new ApiResponse(200, null, "Logout successful")
     );
-
 });
 
 const refreshToken = asyncHandler(async (req, res) => {
-
-    const data = await refreshAccessToken(
-        req.body.refreshToken
-    );
-
+    const data = await refreshAccessToken(req.body.refreshToken);
     return res.status(200).json(
-        new ApiResponse(
-            200,
-            data,
-            "Token refreshed"
-        )
+        new ApiResponse(200, data, "Token refreshed")
     );
+});
 
+const completeProfile = asyncHandler(async (req, res) => {
+    const { idToken, ...profileData } = req.body;
+    const data = await completeProfileService(idToken, profileData);
+    return res.status(201).json(
+        new ApiResponse(201, data, "Profile created successfully")
+    );
+});
+
+const checkUsername = asyncHandler(async (req, res) => {
+    const isAvailable = await checkUsernameService(req.query.username);
+    return res.status(200).json(
+        new ApiResponse(200, { isAvailable }, "Username availability checked")
+    );
 });
 
 export {
-    register,
-    verifyOTP,
-    resendOTP,
-    login,
+    googleLogin,
     getCurrentUser,
     logout,
-    refreshToken
+    refreshToken,
+    completeProfile,
+    checkUsername
 };

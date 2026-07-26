@@ -17,16 +17,16 @@ function getCurrentUserId() {
 
 export async function fetchAllPosts(params = {}) {
   const response = await api.get('/posts', { params });
-  const raw = response.data.message || response.data.data;
-  const posts = raw.posts || raw || [];
+  const raw = response.data.data || {};
+  const posts = raw.posts || (Array.isArray(raw) ? raw : []);
   return normalizePosts(posts, getCurrentUserId());
 }
 
 export async function searchContent(query) {
   if (!query || !query.trim()) return fetchAllPosts();
   const response = await api.get('/posts/search', { params: { query } });
-  const raw = response.data.message || response.data.data;
-  const posts = raw.posts || raw || [];
+  const raw = response.data.data || {};
+  const posts = raw.posts || (Array.isArray(raw) ? raw : []);
   return normalizePosts(posts, getCurrentUserId());
 }
 
@@ -60,7 +60,7 @@ export async function createPost(postData) {
     }
 
     const response = await api.post('/posts', formData);
-    const raw = response.data.message || response.data.data;
+    const raw = response.data.data;
     return normalizePost(raw, getCurrentUserId());
   }
 
@@ -81,7 +81,7 @@ export async function createPost(postData) {
   }
 
   const response = await api.post('/posts', payload);
-  const raw = response.data.message || response.data.data;
+  const raw = response.data.data;
   return normalizePost(raw, getCurrentUserId());
 }
 
@@ -93,7 +93,7 @@ export async function updatePost(postId, postData) {
     isAnonymous: !!postData.isAnonymous,
   };
   const response = await api.patch(`/posts/${postId}`, payload);
-  const raw = response.data.message || response.data.data;
+  const raw = response.data.data;
   return normalizePost(raw, getCurrentUserId());
 }
 
@@ -115,64 +115,68 @@ export async function toggleLike(postId, isCurrentlyLiked) {
 
 export async function fetchComments(postId) {
   const response = await api.get(`/comments/${postId}`);
-  const raw = response.data.message || response.data.data;
-  return raw.comments || raw || [];
+  const raw = response.data.data || {};
+  return raw.comments || (Array.isArray(raw) ? raw : []);
 }
 
 export async function addComment(postId, content) {
   const response = await api.post(`/comments/${postId}`, { content });
-  return response.data.message || response.data.data;
+  return response.data.data;
+}
+
+export async function deleteComment(postId, commentId) {
+  await api.delete(`/comments/${commentId}`);
 }
 
 // ── Polls ─────────────────────────────────────────────────────────────────────
 
 export async function castVote(postId, optionIndex) {
   const response = await api.post(`/posts/${postId}/vote`, { optionIndex });
-  return response.data.message || response.data.data;
+  return response.data.data;
 }
 
 // ── Profile ───────────────────────────────────────────────────────────────────
 
 export async function getProfile() {
   const response = await api.get('/profile');
-  return response.data.message || response.data.data;
+  return response.data.data;
 }
 
 export async function updateProfile(data) {
   const response = await api.patch('/profile', data);
-  return response.data.message || response.data.data;
+  return response.data.data;
 }
 
 export async function getMyPosts() {
   const response = await api.get('/profile/posts');
-  const raw = response.data.message || response.data.data;
-  const posts = raw.posts || raw || [];
+  const raw = response.data.data || {};
+  const posts = raw.posts || (Array.isArray(raw) ? raw : []);
   return normalizePosts(posts, getCurrentUserId());
 }
 
 export async function getMyPolls() {
   const response = await api.get('/profile/polls');
-  const raw = response.data.message || response.data.data;
-  const posts = raw.polls || raw.posts || raw || [];
+  const raw = response.data.data || {};
+  const posts = raw.polls || raw.posts || (Array.isArray(raw) ? raw : []);
   return normalizePosts(posts, getCurrentUserId());
 }
 
 export async function getPublicProfile(userId) {
   const response = await api.get(`/profile/${userId}`);
-  return response.data.message || response.data.data;
+  return response.data.data;
 }
 
 export async function getPublicPosts(userId) {
   const response = await api.get(`/profile/${userId}/posts`);
-  const raw = response.data.message || response.data.data;
-  const posts = raw.posts || raw || [];
+  const raw = response.data.data || {};
+  const posts = raw.posts || (Array.isArray(raw) ? raw : []);
   return normalizePosts(posts, getCurrentUserId());
 }
 
 export async function getPublicPolls(userId) {
   const response = await api.get(`/profile/${userId}/polls`);
-  const raw = response.data.message || response.data.data;
-  const posts = raw.polls || raw.posts || raw || [];
+  const raw = response.data.data || {};
+  const posts = raw.polls || raw.posts || (Array.isArray(raw) ? raw : []);
   return normalizePosts(posts, getCurrentUserId());
 }
 
@@ -180,16 +184,30 @@ export async function getPublicPolls(userId) {
 
 export async function fetchAnnouncements() {
   const response = await api.get('/announcements');
-  const raw = response.data.message || response.data.data;
-  return raw.announcements || raw || [];
+  const raw = response.data.data || {};
+  return raw.announcements || (Array.isArray(raw) ? raw : []);
+}
+
+export async function createAnnouncement(data) {
+  const response = await api.post('/announcements', data);
+  return response.data.data;
+}
+
+export async function updateAnnouncement(id, data) {
+  const response = await api.patch(`/announcements/${id}`, data);
+  return response.data.data;
+}
+
+export async function deleteAnnouncement(id) {
+  await api.delete(`/announcements/${id}`);
 }
 
 // ── Discussion ────────────────────────────────────────────────────────────────
 
 export async function fetchDiscussionMessages(page = 1, limit = 50) {
   const response = await api.get('/discussion/messages', { params: { page, limit } });
-  const raw = response.data.message || response.data.data;
-  return raw.messages || raw || [];
+  const raw = response.data.data || {};
+  return raw.messages || (Array.isArray(raw) ? raw : []);
 }
 
 // ── Misc (stubs kept for components that aren't wired yet) ────────────────────
@@ -222,18 +240,18 @@ export function normalizeNotification(n) {
 
 export async function fetchNotifications() {
   const response = await api.get('/notifications');
-  const raw = response.data.message || response.data.data;
+  const raw = response.data.data;
   return (raw || []).map(normalizeNotification);
 }
 
 export async function markNotificationRead(notificationId) {
   const response = await api.patch(`/notifications/${notificationId}/read`);
-  return response.data.message || response.data.data;
+  return response.data.data;
 }
 
 export async function markAllNotificationsRead() {
   const response = await api.patch('/notifications/read-all');
-  return response.data.message || response.data.data;
+  return response.data.data;
 }
 
 export async function fetchOnlineUserCount() {

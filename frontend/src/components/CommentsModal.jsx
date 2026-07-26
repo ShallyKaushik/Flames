@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { MessageSquare, Send, X, Loader2 } from 'lucide-react';
-import { fetchComments, addComment } from '../services/backendStubs';
+import { fetchComments, addComment, deleteComment } from '../services/backendStubs';
 import defaultPng from '../avatars/default.png';
 import { getAvatarUrl } from '../data/avatars';
+import { Trash2 } from 'lucide-react';
 
 export function CommentsModal({ post, isOpen, onClose, currentUser }) {
   const [comments, setComments] = useState([]);
@@ -50,6 +51,16 @@ export function CommentsModal({ post, isOpen, onClose, currentUser }) {
     if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
     if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
     return `${Math.floor(diff / 86400)}d ago`;
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    if (!window.confirm('Are you sure you want to delete this comment?')) return;
+    try {
+      await deleteComment(post.id, commentId);
+      setComments((prev) => prev.filter(c => c._id !== commentId && c.id !== commentId));
+    } catch (err) {
+      alert('Failed to delete comment.');
+    }
   };
 
   return (
@@ -105,6 +116,15 @@ export function CommentsModal({ post, isOpen, onClose, currentUser }) {
                   </div>
                   <p className="text-xs text-stone-200 leading-relaxed">{c.content || c.text}</p>
                 </div>
+                {currentUser?.role === 'admin' && (
+                  <button
+                    onClick={() => handleDeleteComment(c._id || c.id)}
+                    className="p-1.5 text-stone-500 hover:text-red-400 hover:bg-red-950/30 rounded-lg transition shrink-0 self-center"
+                    title="Delete comment (Admin)"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
             ))
           )}

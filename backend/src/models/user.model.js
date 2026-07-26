@@ -36,9 +36,14 @@ const userSchema = new mongoose.Schema(
             default: "",
         },
 
-        password: {
+        provider: {
             type: String,
-            required: true,
+            default: "google",
+        },
+
+        collegeVerified: {
+            type: Boolean,
+            default: true,
         },
 
         avatar: {
@@ -118,25 +123,7 @@ isActive: {
         timestamps: true,
     }
 );
-userSchema.pre("save", async function () {
 
-    if (!this.isModified("password")) {
-        return;
-    }
-
-    // Don't hash again if it's already hashed
-    if (this.password.startsWith("$2")) {
-        return;
-    }
-
-    this.password = await bcrypt.hash(this.password, 10);
-
-});
-userSchema.methods.isPasswordCorrect = async function (password) {
-
-    return await bcrypt.compare(password, this.password);
-
-};
 userSchema.methods.generateAccessToken = function () {
 
     return jwt.sign(

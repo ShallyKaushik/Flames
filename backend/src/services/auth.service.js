@@ -1,349 +1,171 @@
+import { OAuth2Client } from "google-auth-library";
 import ApiError from "../utils/ApiError.js";
-
-import generateOTP from "../utils/generateOTP.js";
-import hashPassword from "../utils/hashPassword.js";
-import isCollegeEmail from "../utils/isCollegeEmail.js";
-import sendEmail from "../utils/sendEmail.js";
-import {
-    removeRefreshToken
-} from "../repositories/auth.repository.js";
-import otpTemplate from "../templates/otp.template.js";
 import jwt from "jsonwebtoken";
 import {
     findUserByEmail,
-    findUserByUsername,
-    updatePendingUser,
-    findPendingUserByEmail,
     createUser,
-    saveRefreshToken,
-    deletePendingUser,
     updateRefreshToken,
+    removeRefreshToken,
     findUserById
 } from "../repositories/auth.repository.js";
 
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-// ==============================
-// Register User
-// ==============================
-
-const registerUser = async (userData) => {
-
-    const {
-        fullName,
-        username,
-        collegeEmail,
-        password,
-        personalEmail,
-        phoneNumber
-    } = userData;
-
-    if (!isCollegeEmail(collegeEmail)) {
-        throw new ApiError(400, "Invalid college email.");
+const googleLogin = async (idToken) => {
+    if (!idToken) {
+        throw new ApiError(400, "ID Token is required");
     }
 
-    const existingEmail = await findUserByEmail(collegeEmail);
-
-    if (existingEmail) {
-        throw new ApiError(400, "College email already registered.");
+    let payload;
+    try {
+        const ticket = await client.verifyIdToken({
+            idToken,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+        payload = ticket.getPayload();
+    } catch (error) {
+        throw new ApiError(401, "Invalid Google ID Token");
     }
 
-    const existingUsername = await findUserByUsername(username);
-
-    if (existingUsername) {
-        throw new ApiError(400, "Username already exists.");
-    }
-
-    const hashedPassword = await hashPassword(password);
-
-    const otp = generateOTP();
-
-    // Log OTP for development/testing
-    console.log(`\n=========================================`);
-    console.log(`🔑 OTP FOR ${collegeEmail}: ${otp}`);
-    console.log(`=========================================\n`);
-
-    await updatePendingUser(collegeEmail, {
-
-        fullName,
-
-        username,
-
-        collegeEmail,
-
-        personalEmail,
-
-        phoneNumber,
-
-        password: hashedPassword,
-
-        otp,
-
-        otpExpiresAt: new Date(Date.now() + 5 * 60 * 1000),
-
-        expiresAt: new Date(Date.now() + 10 * 60 * 1000)
-
-    });
-
-    await sendEmail(
-
-        collegeEmail,
-
-        "Flames Email Verification",
-
-        otpTemplate(otp)
-
-    );
-
-};
-
-
-// ==============================
-// Resend OTP
-// ==============================
-
-const resendOTP = async (collegeEmail) => {
-    const pendingUser = await findPendingUserByEmail(collegeEmail);
-    if (!pendingUser) {
-        throw new ApiError(404, "Registration request not found.");
-    }
-    
-    if (pendingUser.otpExpiresAt && (pendingUser.otpExpiresAt.getTime() - Date.now() > 4 * 60 * 1000)) {
-        throw new ApiError(400, "Please wait before requesting a new OTP.");
-    }
-
-    const otp = generateOTP();
-
-    // Log OTP for development/testing
-    console.log(`\n=========================================`);
-    console.log(`🔄 RESEND OTP FOR ${collegeEmail}: ${otp}`);
-    console.log(`=========================================\n`);
-    
-    await updatePendingUser(collegeEmail, {
-        otp,
-        otpExpiresAt: new Date(Date.now() + 5 * 60 * 1000)
-    });
-
-    await sendEmail(
-        collegeEmail,
-        "Flames Email Verification - Resend",
-        otpTemplate(otp)
-    );
-};
-
-// ==============================
-// Verify OTP
-// ==============================
-
-const verifyOTP = async ({ collegeEmail, otp }) => {
-
-    console.log("1");
-
-    const pendingUser = await findPendingUserByEmail(collegeEmail);
-    console.log("2");
-
-    if (!pendingUser) {
-        throw new ApiError(404, "Registration request not found.");
-    }
-
-    console.log("3");
-
-    if (pendingUser.otpExpiresAt < new Date()) {
-        throw new ApiError(400, "OTP has expired.");
-    }
-
-    console.log("4");
-
-    if (pendingUser.otp !== otp) {
-        throw new ApiError(400, "Invalid OTP.");
-    }
-
-    console.log("5");
+    const { email, name, picture } = payload;
 
     const adminEmails = [
         "shallykaushik00@gmail.com",
         "devansh.tripathi2004@gmail.com"
     ];
-    const role = adminEmails.includes(pendingUser.collegeEmail) ? "admin" : "student";
 
-    const user = await createUser({
-        fullName: pendingUser.fullName,
-        username: pendingUser.username,
-        collegeEmail: pendingUser.collegeEmail,
-        personalEmail: pendingUser.personalEmail,
-        phoneNumber: pendingUser.phoneNumber,
-        password: pendingUser.password,
-        role,
-        isVerified: true
-    });
+    if (!email.endsWith("@mail.jiit.ac.in") && !adminEmails.includes(email)) {
+        throw new ApiError(403, "Only JIIT students are allowed to use Flames.");
+    }
 
-    console.log("6");
-
-    const accessToken = user.generateAccessToken();
-
-    console.log("7");
-
-    const refreshToken = user.generateRefreshToken();
-
-    console.log("8");
-
-    await saveRefreshToken(user._id, refreshToken);
-
-    console.log("9");
-
-    await deletePendingUser(collegeEmail);
-
-    console.log("10");
-
-    return {
-        user,
-        accessToken,
-        refreshToken
-    };
-
-    await deletePendingUser(collegeEmail);
-
-    return {
-
-        user,
-
-        accessToken,
-
-        refreshToken
-
-    };
-
-};
-
-
-// ==============================
-// Login User
-// ==============================
-
-const loginUser = async ({ collegeEmail, password }) => {
-
-    const user = await findUserByEmail(collegeEmail);
+    let user = await findUserByEmail(email);
 
     if (!user) {
-
-        throw new ApiError(
-            404,
-            "User not found"
-        );
-
+        return {
+            isNewUser: true,
+            googleData: {
+                email,
+                fullName: name,
+                picture
+            }
+        };
+    } else {
+        // Ensure existing admin users have their role upgraded if it wasn't already
+        if (adminEmails.includes(email) && user.role !== "admin") {
+            user.role = "admin";
+            await user.save();
+        }
     }
 
-    const isPasswordCorrect =
-        await user.isPasswordCorrect(password);
+    const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
 
-    if (!isPasswordCorrect) {
-
-        throw new ApiError(
-            401,
-            "Invalid credentials"
-        );
-
-    }
-
-    const accessToken =
-        user.generateAccessToken();
-
-    const refreshToken =
-        user.generateRefreshToken();
-
-    await updateRefreshToken(
-        user._id,
-        refreshToken
-    );
+    await updateRefreshToken(user._id, refreshToken);
 
     return {
-
         user,
-
         accessToken,
-
         refreshToken
-
     };
-
 };
 
 const logoutUser = async (userId) => {
-
     await removeRefreshToken(userId);
-
 };
 
-
 const refreshAccessToken = async (refreshToken) => {
-
     if (!refreshToken) {
-
-        throw new ApiError(
-            401,
-            "Refresh token missing"
-        );
-
+        throw new ApiError(401, "Refresh token missing");
     }
-
-    const decoded = jwt.verify(
-
-        refreshToken,
-
-        process.env.JWT_REFRESH_SECRET
-
-    );
-
+    let decoded;
+    try {
+        decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    } catch (error) {
+        throw new ApiError(401, "Invalid or expired refresh token");
+    }
     const user = await findUserById(decoded._id);
-
     if (!user) {
-
-        throw new ApiError(
-            401,
-            "Invalid refresh token"
-        );
-
+        throw new ApiError(401, "User not found");
     }
-
     if (user.refreshToken !== refreshToken) {
+        throw new ApiError(401, "Refresh token mismatch");
+    }
+    const accessToken = user.generateAccessToken();
+    const newRefreshToken = user.generateRefreshToken();
+    await updateRefreshToken(user._id, newRefreshToken);
+    return { accessToken, refreshToken: newRefreshToken };
+};
 
-        throw new ApiError(
-            401,
-            "Refresh token mismatch"
-        );
-
+const completeProfileService = async (idToken, profileData) => {
+    if (!idToken) {
+        throw new ApiError(400, "ID Token is required");
     }
 
-    const accessToken =
-        user.generateAccessToken();
+    let payload;
+    try {
+        const ticket = await client.verifyIdToken({
+            idToken,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+        payload = ticket.getPayload();
+    } catch (error) {
+        throw new ApiError(401, "Invalid Google ID Token");
+    }
 
-    const newRefreshToken =
-        user.generateRefreshToken();
+    const { email } = payload;
+    
+    const adminEmails = [
+        "shallykaushik00@gmail.com",
+        "devansh.tripathi2004@gmail.com"
+    ];
 
-    await updateRefreshToken(
+    if (!email.endsWith("@mail.jiit.ac.in") && !adminEmails.includes(email)) {
+        throw new ApiError(403, "Only JIIT students are allowed to use Flames.");
+    }
 
-        user._id,
+    let user = await findUserByEmail(email);
+    if (user) {
+        throw new ApiError(400, "User already exists");
+    }
 
-        newRefreshToken
+    const existingUsername = await findUserByUsername(profileData.username);
+    if (existingUsername) {
+        throw new ApiError(400, "Username is already taken");
+    }
 
-    );
+    const role = adminEmails.includes(email) ? "admin" : "student";
+    
+    user = await createUser({
+        ...profileData,
+        collegeEmail: email,
+        role,
+        isVerified: true,
+        collegeVerified: true,
+        provider: "google"
+    });
+
+    const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
+
+    await updateRefreshToken(user._id, refreshToken);
 
     return {
-
+        user,
         accessToken,
-
-        refreshToken: newRefreshToken
-
+        refreshToken
     };
+};
 
+const checkUsernameService = async (username) => {
+    if (!username) return false;
+    const user = await findUserByUsername(username);
+    return !user;
 };
 
 export {
-
-    registerUser,
-    verifyOTP,
-    resendOTP,
-    loginUser,
+    googleLogin,
     logoutUser,
-    refreshAccessToken
-
+    refreshAccessToken,
+    completeProfileService,
+    checkUsernameService
 };

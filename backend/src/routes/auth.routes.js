@@ -1,54 +1,24 @@
 import express from "express";
 import verifyJWT from "../middlewares/auth.middleware.js";
 import {
-    register,
-    verifyOTP,
-    resendOTP,
-    login,
+    googleLogin,
     getCurrentUser,
     logout,
-    refreshToken
+    refreshToken,
+    completeProfile,
+    checkUsername
 } from "../controllers/auth.controller.js";
-
-import {
-    registerValidator,
-    verifyOTPValidator,
-    loginValidator
-} from "../validators/auth.validator.js";
-
+import { googleLoginValidator, completeProfileValidator } from "../validators/auth.validator.js";
 import validate from "../middlewares/validate.middleware.js";
+import postRoutes from "./post.routes.js";
 
 const router = express.Router();
 
 router.post(
-    "/register",
-    registerValidator,
+    "/google",
+    googleLoginValidator,
     validate,
-    register
-);
-
-router.post(
-    "/verify-otp",
-    verifyOTPValidator,
-    validate,
-    verifyOTP
-);
-
-router.post(
-    "/resend-otp",
-    resendOTP
-);
-
-router.post(
-
-    "/login",
-
-    loginValidator,
-
-    validate,
-
-    login
-
+    googleLogin
 );
 
 router.get(
@@ -58,23 +28,27 @@ router.get(
 );
 
 router.post(
-
     "/logout",
-
     verifyJWT,
-
     logout
-
 );
+
 router.post(
-
     "/refresh-token",
-
     refreshToken
-
 );
 
-import postRoutes from "./post.routes.js";
+router.post(
+    "/complete-profile",
+    completeProfileValidator,
+    validate,
+    completeProfile
+);
+
+router.get(
+    "/check-username",
+    checkUsername
+);
 
 router.use("/posts", postRoutes);
 

@@ -16,6 +16,7 @@ import { ProfileView } from './views/ProfileView';
 import { EditProfileView } from './views/EditProfileView';
 import { ProfileSetupView } from './views/ProfileSetupView';
 import { AuthView } from './views/AuthView';
+import { AdminDashboardView } from './views/AdminDashboardView';
 
 import { searchContent, applyFilters, fetchNotifications, fetchAllPosts, filterByCategory, createPost } from './services/backendStubs';
 import { AVATARS, DEFAULT_AVATAR } from './data/avatars';
@@ -38,6 +39,8 @@ export default function App() {
     } catch (e) {}
     return null;
   });
+
+  const [pendingSetupData, setPendingSetupData] = useState(null);
 
   // Navigation State
   const [activeRoute, setActiveRoute] = useState('home');
@@ -101,10 +104,18 @@ export default function App() {
 
   // Auth Handlers
   const handleLoginSuccess = (loginResponse) => {
+    if (loginResponse.isNewUser) {
+      setPendingSetupData({
+        idToken: loginResponse.idToken,
+        googleData: loginResponse.googleData,
+      });
+      return;
+    }
+
     const { user, accessToken, refreshToken } = loginResponse;
     const updatedUser = {
       ...user,
-      hasCompletedSetup: true, // Assuming setup is done or not needed, adjust if you want ProfileSetupView
+      hasCompletedSetup: true,
     };
     setCurrentUser(updatedUser);
     try {
@@ -253,17 +264,20 @@ export default function App() {
     });
   };
 
-  // 1. If user is not logged in, render full Auth Screen
-  if (!currentUser) {
+  // 1. If user is not logged in and no pending setup data, render full Auth Screen
+  if (!currentUser && !pendingSetupData) {
     return <AuthView onLoginSuccess={handleLoginSuccess} />;
   }
 
   // 2. First-time login profile setup check
-  if (!currentUser.hasCompletedSetup) {
+  if (pendingSetupData) {
     return (
       <ProfileSetupView
-        user={currentUser}
-        onCompleteSetup={handleCompleteSetup}
+        pendingSetupData={pendingSetupData}
+        onCompleteSetup={(res) => {
+          setPendingSetupData(null);
+          handleLoginSuccess(res); // Treat setup completion as a normal login success
+        }}
       />
     );
   }
@@ -278,10 +292,7 @@ export default function App() {
         unreadCount={unreadCount}
         onToggleNotifications={handleToggleNotifications}
         onOpenReportModal={() => setIsReportModalOpen(true)}
-        onOpenProfile={() => {
-          setActiveRoute('profile');
-          setTargetProfileId(null);
-        }}
+        onOpenProfile={() => setIsProfileOpen(true)}
       />
 
       {/* Success Toast Notification Banner */}
@@ -363,6 +374,7 @@ export default function App() {
             onUpdatePost={handleUpdatePost}
             onEditPost={(post) => setCreateModalState({ isOpen: true, type: post.type, editData: post })}
             onOpenEditProfile={() => setActiveRoute('edit_profile')}
+            onOpenAdminDashboard={() => setActiveRoute('admin')}
           />
         )}
 
@@ -372,6 +384,10 @@ export default function App() {
             onSaveProfile={handleSaveProfile}
             onBack={() => setActiveRoute('profile')}
           />
+        )}
+
+        {activeRoute === 'admin' && currentUser?.role === 'admin' && (
+          <AdminDashboardView />
         )}
       </main>
 
@@ -410,6 +426,7 @@ export default function App() {
       <CommentsModal
         isOpen={commentsModalState.isOpen}
         post={commentsModalState.post}
+        currentUser={currentUser}
         onClose={() => setCommentsModalState({ isOpen: false, post: null })}
         onNavigateProfile={handleNavigateProfile}
       />

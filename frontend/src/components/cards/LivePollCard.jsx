@@ -6,12 +6,15 @@ import { getAvatarUrl } from '../../data/avatars';
 import { PostOptionsDropdown } from './PostOptionsDropdown';
 
 export function LivePollCard({ post, onUpdatePost, onDeletePost, onEditPost, onOpenComments, onNavigateProfile }) {
-  const currentUserId = (() => {
+  const { currentUserId, isAdmin } = (() => {
     try {
       const saved = localStorage.getItem('flames_user');
-      if (saved) return JSON.parse(saved)._id || JSON.parse(saved).id;
+      if (saved) {
+        const u = JSON.parse(saved);
+        return { currentUserId: u._id || u.id, isAdmin: u.role === 'admin' };
+      }
     } catch (_) {}
-    return null;
+    return { currentUserId: null, isAdmin: false };
   })();
   const isAuthor = currentUserId === (post.author?._id || post.author?.id);
 
@@ -86,6 +89,7 @@ export function LivePollCard({ post, onUpdatePost, onDeletePost, onEditPost, onO
           <span>{post.timeAgo}{post.isEdited ? ' • Edited' : ''}</span>
           <PostOptionsDropdown 
             isAuthor={isAuthor} 
+            isAdmin={isAdmin}
             onEdit={() => onEditPost(post)} 
             onDelete={handleDelete} 
           />

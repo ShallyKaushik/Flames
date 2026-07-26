@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MoreHorizontal, Edit2, Trash2 } from 'lucide-react';
 
-export function PostOptionsDropdown({ isAuthor, onEdit, onDelete }) {
+export function PostOptionsDropdown({ isAuthor, isAdmin, onEdit, onDelete }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -52,6 +52,16 @@ export function PostOptionsDropdown({ isAuthor, onEdit, onDelete }) {
                 <Trash2 className="w-3.5 h-3.5" /> Delete
               </button>
             </>
+          ) : isAdmin ? (
+            <button
+              onClick={() => {
+                setIsOpen(false);
+                onDelete();
+              }}
+              className="w-full text-left px-3 py-1.5 text-xs font-bold text-red-600 hover:bg-red-50 flex items-center gap-2 cursor-pointer transition"
+            >
+              <Trash2 className="w-3.5 h-3.5" /> Delete (Admin)
+            </button>
           ) : (
             <button
               onClick={() => {

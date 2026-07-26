@@ -16,11 +16,8 @@ export const createAnnouncementValidator = [
 
     body("priority")
         .optional()
-        .isInt({
-            min: 1,
-            max: 3,
-        })
-        .withMessage("Priority must be between 1 and 3"),
+        .isIn(["low", "medium", "high"])
+        .withMessage("Priority must be low, medium, or high"),
 
 ];
 
