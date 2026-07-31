@@ -12,9 +12,9 @@ import {
 } from "../repositories/discussion.repository.js";
 import { createNotificationService } from "./notification.service.js";
 
-const MESSAGE_LIMIT = 120;
-const COOLDOWN = 3000;
-const CONSECUTIVE_LIMIT = 5;
+const MESSAGE_LIMIT = 5000;
+const COOLDOWN = 1000;
+const CONSECUTIVE_LIMIT = 15;
 const EDIT_TIME_LIMIT = 5 * 60 * 1000;
 
 const formatDiscussionMessage = (
@@ -77,7 +77,7 @@ const createMessageService = async (
     }
 
     const lastFive =
-        await getLastMessages();
+        await getLastMessages(CONSECUTIVE_LIMIT);
 
     if (
         lastFive.length === CONSECUTIVE_LIMIT &&
@@ -133,7 +133,7 @@ const getMessagesService = async (
             limit
         );
 
-    return messages.map(message =>
+    return messages.reverse().map(message =>
         formatDiscussionMessage(
             message,
             user

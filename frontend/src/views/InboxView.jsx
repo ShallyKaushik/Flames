@@ -46,12 +46,16 @@ export function InboxView({ currentUser }) {
       socket.on('messageDeleted', ({ messageId }) => {
         setMessages((prev) => prev.filter(m => m.id !== messageId));
       });
+      socket.on('discussionError', (errMsg) => {
+        alert(`Message not sent: ${errMsg}`);
+      });
     }
 
     return () => {
       if (socket) {
         socket.off('messageReceived');
         socket.off('messageDeleted');
+        socket.off('discussionError');
       }
     };
   }, [currentUser]);

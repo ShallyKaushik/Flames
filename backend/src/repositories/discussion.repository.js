@@ -16,7 +16,7 @@ const getMessages = (skip, limit) => {
             "fullName username avatar"
         )
         .sort({
-            createdAt: 1,
+            createdAt: -1,
         })
         .skip(skip)
         .limit(limit);
