@@ -70,7 +70,13 @@ export function InboxView({ currentUser }) {
       verified: !msg.isAnonymous,
       sub: msg.isAnonymous ? 'Campus Voice' : 'User',
       isAnonymous: msg.isAnonymous,
-      isMe: msg.sender?._id === currentUser?._id || msg.sender?._id === currentUser?.id || msg.sender?.username === currentUser?.username,
+      isMe: Boolean(
+        currentUser && msg.sender &&
+        (
+          (msg.sender._id && (msg.sender._id === currentUser._id || msg.sender._id === currentUser.id)) ||
+          (msg.sender.username && msg.sender.username !== "anonymous" && msg.sender.username === currentUser.username)
+        )
+      ),
       text: msg.message,
       time: new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       avatar: msg.isAnonymous && !isAdminViewingAnon ? null : getAvatarUrl(msg.sender?.avatar),
