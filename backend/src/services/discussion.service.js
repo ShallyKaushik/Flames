@@ -111,10 +111,10 @@ const createMessageService = async (
         "fullName username avatar"
     );
 
-    return formatDiscussionMessage(
-        savedMessage,
-        user
-    );
+    return {
+        rawMessage: savedMessage,
+        formattedMessage: formatDiscussionMessage(savedMessage, user)
+    };
 
 };
 
@@ -196,10 +196,10 @@ const updateMessageService = async (
             message
         );
 
-    return formatDiscussionMessage(
-        updatedMessage,
-        user
-    );
+    return {
+        rawMessage: updatedMessage,
+        formattedMessage: formatDiscussionMessage(updatedMessage, user)
+    };
 
 };
 

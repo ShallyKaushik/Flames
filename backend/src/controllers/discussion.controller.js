@@ -11,7 +11,7 @@ import {
 const createMessage = asyncHandler(
     async (req, res) => {
 
-        const message = await createMessageService(
+        const { formattedMessage } = await createMessageService(
             req.user,
             req.body.message,
             req.body.isAnonymous
@@ -20,7 +20,7 @@ const createMessage = asyncHandler(
         return res.status(201).json(
             new ApiResponse(
                 201,
-                message,
+                formattedMessage,
                 "Message sent"
             )
         );
@@ -58,7 +58,7 @@ const getMessages = asyncHandler(
 const updateMessage = asyncHandler(
     async (req, res) => {
 
-        const message =
+        const { formattedMessage } =
             await updateMessageService(
                 req.user,
                 req.params.messageId,
@@ -68,7 +68,7 @@ const updateMessage = asyncHandler(
         return res.status(200).json(
             new ApiResponse(
                 200,
-                message,
+                formattedMessage,
                 "Message updated"
             )
         );

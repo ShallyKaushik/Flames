@@ -61,16 +61,19 @@ export function InboxView({ currentUser }) {
   }, [currentUser]);
 
   const formatBackendMessage = (msg) => {
+    const isAdminViewingAnon = msg.isAnonymous && msg.sender?.username !== "anonymous";
     return {
       id: msg._id,
-      author: msg.sender?.fullName || msg.sender?.username || 'Unknown',
+      author: isAdminViewingAnon 
+        ? `${msg.sender?.fullName || msg.sender?.username || 'Unknown'} (Admin View)` 
+        : (msg.sender?.fullName || msg.sender?.username || 'Unknown'),
       verified: !msg.isAnonymous,
       sub: msg.isAnonymous ? 'Campus Voice' : 'User',
       isAnonymous: msg.isAnonymous,
       isMe: msg.sender?._id === currentUser?._id || msg.sender?._id === currentUser?.id || msg.sender?.username === currentUser?.username,
       text: msg.message,
       time: new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      avatar: msg.isAnonymous ? null : getAvatarUrl(msg.sender?.avatar),
+      avatar: msg.isAnonymous && !isAdminViewingAnon ? null : getAvatarUrl(msg.sender?.avatar),
       isEdited: !!msg.edited,
     };
   };

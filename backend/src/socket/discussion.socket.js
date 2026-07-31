@@ -2,6 +2,7 @@ import {
     createMessageService,
     updateMessageService,
     deleteMessageService,
+    formatDiscussionMessage,
 } from "../services/discussion.service.js";
 
 const onlineUsers = new Map();
@@ -34,17 +35,20 @@ const registerDiscussionSocket = (io) => {
 
                 try {
 
-                    const savedMessage =
+                    const { rawMessage } =
                         await createMessageService(
                             socket.user,
                             data.message,
                             data.isAnonymous
                         );
 
-                    io.to("discussion").emit(
-                        "messageReceived",
-                        savedMessage
-                    );
+                    const sockets = await io.in("discussion").fetchSockets();
+                    for (const s of sockets) {
+                        if (s.user) {
+                            const tailoredMessage = formatDiscussionMessage(rawMessage, s.user);
+                            s.emit("messageReceived", tailoredMessage);
+                        }
+                    }
 
                 } catch (error) {
 
@@ -97,17 +101,20 @@ const registerDiscussionSocket = (io) => {
 
                 try {
 
-                    const updatedMessage =
+                    const { rawMessage } =
                         await updateMessageService(
                             socket.user,
                             data.messageId,
                             data.message
                         );
 
-                    io.to("discussion").emit(
-                        "messageUpdated",
-                        updatedMessage
-                    );
+                    const sockets = await io.in("discussion").fetchSockets();
+                    for (const s of sockets) {
+                        if (s.user) {
+                            const tailoredMessage = formatDiscussionMessage(rawMessage, s.user);
+                            s.emit("messageUpdated", tailoredMessage);
+                        }
+                    }
 
                 } catch (error) {
 
