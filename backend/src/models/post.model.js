@@ -121,6 +121,8 @@ const postSchema = new mongoose.Schema(
     }
 );
 
+postSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+
 const Post = mongoose.model("Post", postSchema);
 
 export default Post;
