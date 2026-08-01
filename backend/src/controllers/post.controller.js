@@ -15,7 +15,7 @@ const createPost = asyncHandler(async (req, res) => {
 
     const post = await createPostService(
         req.body,
-        req.user._id,
+        req.user,
         req.file
     );
 

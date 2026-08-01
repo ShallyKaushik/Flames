@@ -8,6 +8,7 @@ import {
     deletePost,
     searchPosts,
     searchPostsCount,
+    getLastPostByUser,
     votePoll,
 } from "../repositories/post.repository.js";
 const expiryDays = {
@@ -280,7 +281,21 @@ const deletePostService = async (postId, user) => {
     return;
 };
 
-const createPostService = async (data, userId, file) => {
+const createPostService = async (data, user, file) => {
+
+    if (user.role !== "admin") {
+        const lastPost = await getLastPostByUser(user._id);
+        if (lastPost) {
+            const fiveHoursInMs = 5 * 60 * 60 * 1000;
+            const timeSinceLastPost = Date.now() - new Date(lastPost.createdAt).getTime();
+            if (timeSinceLastPost < fiveHoursInMs) {
+                const remainingTimeMs = fiveHoursInMs - timeSinceLastPost;
+                const remainingHours = Math.floor(remainingTimeMs / (1000 * 60 * 60));
+                const remainingMinutes = Math.floor((remainingTimeMs % (1000 * 60 * 60)) / (1000 * 60));
+                throw new ApiError(403, `You can only post once every 5 hours. Please wait ${remainingHours}h ${remainingMinutes}m.`);
+            }
+        }
+    }
 
     let imageUrl = null;
 
@@ -292,7 +307,7 @@ const createPostService = async (data, userId, file) => {
 
         ...data,
 
-        author: userId,
+        author: user._id,
 
         expiresAt: calculateExpiry(data.category),
 

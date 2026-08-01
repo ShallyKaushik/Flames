@@ -63,6 +63,10 @@ const deletePost = (postId) => {
     return Post.findByIdAndDelete(postId);
 };
 
+const getLastPostByUser = async (userId) => {
+    return await Post.findOne({ author: userId }).sort({ createdAt: -1 });
+};
+
 const votePoll = async (post) => {
     return await post.save();
 };
@@ -127,6 +131,7 @@ export {
     getPostById,
     updatePost,
     deletePost,
+    getLastPostByUser,
     searchPosts,
     searchPostsCount,
     votePoll,
