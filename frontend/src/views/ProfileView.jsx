@@ -98,39 +98,41 @@ export function ProfileView({ currentUser, targetUserId, onLogout, onOpenEditPro
       </div>
 
       {/* Stats 2x2 Grid */}
-      <div className="grid grid-cols-2 gap-2.5">
-        <div className="bg-[#2b1d16] border border-[#3d2a20] p-4 rounded-3xl space-y-1 text-left shadow-xs">
-          <div className="flex items-center gap-2">
-            <FileText className="w-4 h-4 text-[#f47b31]" />
-            <span className="text-xl font-extrabold text-white">{myPosts.length}</span>
+      {!isPublicView && (
+        <div className="grid grid-cols-2 gap-2.5">
+          <div className="bg-[#2b1d16] border border-[#3d2a20] p-4 rounded-3xl space-y-1 text-left shadow-xs">
+            <div className="flex items-center gap-2">
+              <FileText className="w-4 h-4 text-[#f47b31]" />
+              <span className="text-xl font-extrabold text-white">{myPosts.length}</span>
+            </div>
+            <p className="text-xs text-stone-400 font-medium">Posts</p>
           </div>
-          <p className="text-xs text-stone-400 font-medium">Posts</p>
-        </div>
 
-        <div className="bg-[#2b1d16] border border-[#3d2a20] p-4 rounded-3xl space-y-1 text-left shadow-xs">
-          <div className="flex items-center gap-2">
-            <MessageSquare className="w-4 h-4 text-[#f47b31]" />
-            <span className="text-xl font-extrabold text-white">{stats.comments ?? '—'}</span>
+          <div className="bg-[#2b1d16] border border-[#3d2a20] p-4 rounded-3xl space-y-1 text-left shadow-xs">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="w-4 h-4 text-[#f47b31]" />
+              <span className="text-xl font-extrabold text-white">{stats.comments ?? '—'}</span>
+            </div>
+            <p className="text-xs text-stone-400 font-medium">Comments</p>
           </div>
-          <p className="text-xs text-stone-400 font-medium">Comments</p>
-        </div>
 
-        <div className="bg-[#2b1d16] border border-[#3d2a20] p-4 rounded-3xl space-y-1 text-left shadow-xs">
-          <div className="flex items-center gap-2">
-            <Heart className="w-4 h-4 text-[#f47b31]" />
-            <span className="text-xl font-extrabold text-white">{stats.likesReceived ?? '—'}</span>
+          <div className="bg-[#2b1d16] border border-[#3d2a20] p-4 rounded-3xl space-y-1 text-left shadow-xs">
+            <div className="flex items-center gap-2">
+              <Heart className="w-4 h-4 text-[#f47b31]" />
+              <span className="text-xl font-extrabold text-white">{stats.likesReceived ?? '—'}</span>
+            </div>
+            <p className="text-xs text-stone-400 font-medium">Likes Received</p>
           </div>
-          <p className="text-xs text-stone-400 font-medium">Likes Received</p>
-        </div>
 
-        <div className="bg-[#2b1d16] border border-[#3d2a20] p-4 rounded-3xl space-y-1 text-left shadow-xs">
-          <div className="flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-[#f47b31]" />
-            <span className="text-xl font-extrabold text-white">{myPolls.length}</span>
+          <div className="bg-[#2b1d16] border border-[#3d2a20] p-4 rounded-3xl space-y-1 text-left shadow-xs">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-[#f47b31]" />
+              <span className="text-xl font-extrabold text-white">{myPolls.length}</span>
+            </div>
+            <p className="text-xs text-stone-400 font-medium">Polls Created</p>
           </div>
-          <p className="text-xs text-stone-400 font-medium">Polls Created</p>
         </div>
-      </div>
+      )}
 
       {/* Bio Card */}
       <div className="bg-[#2b1d16] border border-[#3d2a20] rounded-3xl p-4 space-y-2 relative shadow-xs">
@@ -152,66 +154,68 @@ export function ProfileView({ currentUser, targetUserId, onLogout, onOpenEditPro
       </div>
 
       {/* My Activity Section */}
-      <div className="bg-[#2b1d16] border border-[#3d2a20] rounded-3xl p-4 space-y-4 shadow-xs">
-        <div className="flex items-center border-b border-[#3d2a20]">
-          <button
-            onClick={() => setActiveTab('my_posts')}
-            className={`flex-1 py-2.5 text-xs font-extrabold text-center transition cursor-pointer border-b-2 ${
-              activeTab === 'my_posts'
-                ? 'border-[#f47b31] text-[#f47b31]'
-                : 'border-transparent text-stone-400 hover:text-white'
-            }`}
-          >
-            My Posts
-          </button>
-          <button
-            onClick={() => setActiveTab('my_polls')}
-            className={`flex-1 py-2.5 text-xs font-extrabold text-center transition cursor-pointer border-b-2 ${
-              activeTab === 'my_polls'
-                ? 'border-[#f47b31] text-[#f47b31]'
-                : 'border-transparent text-stone-400 hover:text-white'
-            }`}
-          >
-            My Polls
-          </button>
-        </div>
+      {!isPublicView && (
+        <div className="bg-[#2b1d16] border border-[#3d2a20] rounded-3xl p-4 space-y-4 shadow-xs">
+          <div className="flex items-center border-b border-[#3d2a20]">
+            <button
+              onClick={() => setActiveTab('my_posts')}
+              className={`flex-1 py-2.5 text-xs font-extrabold text-center transition cursor-pointer border-b-2 ${
+                activeTab === 'my_posts'
+                  ? 'border-[#f47b31] text-[#f47b31]'
+                  : 'border-transparent text-stone-400 hover:text-white'
+              }`}
+            >
+              My Posts
+            </button>
+            <button
+              onClick={() => setActiveTab('my_polls')}
+              className={`flex-1 py-2.5 text-xs font-extrabold text-center transition cursor-pointer border-b-2 ${
+                activeTab === 'my_polls'
+                  ? 'border-[#f47b31] text-[#f47b31]'
+                  : 'border-transparent text-stone-400 hover:text-white'
+              }`}
+            >
+              My Polls
+            </button>
+          </div>
 
-        <div className="space-y-2.5">
-          {activeTab === 'my_posts' ? (
-            myPosts.length > 0 ? (
-              myPosts.map((p) => (
-                <div key={p.id} className="bg-[#231711] p-3 rounded-2xl border border-[#3d2a20] flex items-center justify-between gap-3">
-                  <div className="space-y-1 min-w-0">
-                    <h4 className="text-xs font-bold text-white truncate">{p.title || p.content || p.question}</h4>
-                    <span className="bg-[#3d2a20] text-[#f47b31] text-[10px] font-bold px-2 py-0.5 rounded-full inline-block">
-                      {p.categoryLabel || 'GENERAL'}
-                    </span>
+          <div className="space-y-2.5">
+            {activeTab === 'my_posts' ? (
+              myPosts.length > 0 ? (
+                myPosts.map((p) => (
+                  <div key={p.id} className="bg-[#231711] p-3 rounded-2xl border border-[#3d2a20] flex items-center justify-between gap-3">
+                    <div className="space-y-1 min-w-0">
+                      <h4 className="text-xs font-bold text-white truncate">{p.title || p.content || p.question}</h4>
+                      <span className="bg-[#3d2a20] text-[#f47b31] text-[10px] font-bold px-2 py-0.5 rounded-full inline-block">
+                        {p.categoryLabel || 'GENERAL'}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-stone-400 shrink-0 font-medium">{p.timeAgo}</span>
                   </div>
-                  <span className="text-[10px] text-stone-400 shrink-0 font-medium">{p.timeAgo}</span>
-                </div>
-              ))
+                ))
+              ) : (
+                <p className="text-xs text-stone-400 text-center py-4">No posts yet.</p>
+              )
             ) : (
-              <p className="text-xs text-stone-400 text-center py-4">No posts yet.</p>
-            )
-          ) : (
-            myPolls.length > 0 ? (
-              myPolls.map((p) => (
-                <div key={p.id} className="bg-[#231711] p-3 rounded-2xl border border-[#3d2a20] flex items-center justify-between gap-3">
-                  <div className="space-y-1 min-w-0">
-                    <h4 className="text-xs font-bold text-white truncate">{p.question || p.title}</h4>
-                    <span className="bg-[#3d2a20] text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full inline-block">
-                      POLL
-                    </span>
+              myPolls.length > 0 ? (
+                myPolls.map((p) => (
+                  <div key={p.id} className="bg-[#231711] p-3 rounded-2xl border border-[#3d2a20] flex items-center justify-between gap-3">
+                    <div className="space-y-1 min-w-0">
+                      <h4 className="text-xs font-bold text-white truncate">{p.question || p.title}</h4>
+                      <span className="bg-[#3d2a20] text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full inline-block">
+                        POLL
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-stone-400 shrink-0 font-medium">{p.timeAgo}</span>
                   </div>
-                  <span className="text-[10px] text-stone-400 shrink-0 font-medium">{p.timeAgo}</span>
-                </div>
-              ))
-            ) : (
-              <p className="text-xs text-stone-400 text-center py-4">No polls yet.</p>
-            )
-          )}
+                ))
+              ) : (
+                <p className="text-xs text-stone-400 text-center py-4">No polls yet.</p>
+              )
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Edit Profile Button Card */}
       {!isPublicView && (
