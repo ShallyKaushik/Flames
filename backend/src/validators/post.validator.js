@@ -25,6 +25,7 @@ export const createPostValidator = [
             "sports",
             "lost-found",
             "buy-sell",
+            "travel",
         ])
         .withMessage("Invalid category"),
 
@@ -60,6 +61,7 @@ export const updatePostValidator = [
             "sports",
             "lost-found",
             "buy-sell",
+            "travel",
         ])
         .withMessage("Invalid category"),
 

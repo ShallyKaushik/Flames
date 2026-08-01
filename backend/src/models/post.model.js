@@ -34,6 +34,7 @@ const postSchema = new mongoose.Schema(
                 "sports",
                 "lost-found",
                 "buy-sell",
+                "travel",
             ],
             required: true,
         },
