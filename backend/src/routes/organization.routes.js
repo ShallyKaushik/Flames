@@ -5,19 +5,19 @@ import {
     updateOrganization,
     deleteOrganization,
 } from "../controllers/organization.controller.js";
-import { verifyJWT } from "../middlewares/auth.middleware.js";
-import { isAdmin } from "../middlewares/admin.middleware.js";
-import { validate } from "../middlewares/validate.middleware.js";
+import verifyJWT from "../middlewares/auth.middleware.js";
+import verifyAdmin from "../middlewares/admin.middleware.js";
+import validate from "../middlewares/validate.middleware.js";
 import { organizationValidationRules } from "../validators/organization.validator.js";
 
 const router = Router();
 
 router.get("/", verifyJWT, getOrganizations);
 
-router.use(verifyJWT, isAdmin);
+router.use(verifyJWT, verifyAdmin);
 
-router.post("/", validate(organizationValidationRules), createOrganization);
-router.put("/:orgId", validate(organizationValidationRules), updateOrganization);
+router.post("/", organizationValidationRules, validate, createOrganization);
+router.put("/:orgId", organizationValidationRules, validate, updateOrganization);
 router.delete("/:orgId", deleteOrganization);
 
 export default router;
