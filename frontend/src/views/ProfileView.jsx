@@ -56,8 +56,8 @@ export function ProfileView({ currentUser, targetUserId, onLogout, onOpenEditPro
           {/* Avatar Circle with Pencil Icon */}
           <div className="relative shrink-0">
             <button
-              onClick={() => setIsAvatarModalOpen(true)}
-              className="w-20 h-20 rounded-full bg-[#1c120c] border-2 border-[#f47b31] p-1 flex items-center justify-center overflow-hidden shadow-md transition cursor-pointer"
+              onClick={() => !isPublicView && setIsAvatarModalOpen(true)}
+              className={`w-20 h-20 rounded-full bg-[#1c120c] border-2 border-[#f47b31] p-1 flex items-center justify-center overflow-hidden shadow-md transition ${isPublicView ? 'cursor-default' : 'cursor-pointer'}`}
               title="Change avatar"
             >
               <img src={activeAvatarUrl} alt={user.name} className="w-full h-full rounded-full object-cover" />

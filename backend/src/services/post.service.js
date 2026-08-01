@@ -299,13 +299,13 @@ const createPostService = async (data, user, file) => {
     if (user.role !== "admin") {
         const lastPost = await getLastPostByUser(user._id);
         if (lastPost) {
-            const fiveHoursInMs = 5 * 60 * 60 * 1000;
+            const cooldownInMs = 2 * 60 * 1000; // 2 minutes
             const timeSinceLastPost = Date.now() - new Date(lastPost.createdAt).getTime();
-            if (timeSinceLastPost < fiveHoursInMs) {
-                const remainingTimeMs = fiveHoursInMs - timeSinceLastPost;
-                const remainingHours = Math.floor(remainingTimeMs / (1000 * 60 * 60));
-                const remainingMinutes = Math.floor((remainingTimeMs % (1000 * 60 * 60)) / (1000 * 60));
-                throw new ApiError(403, `You can only post once every 5 hours. Please wait ${remainingHours}h ${remainingMinutes}m.`);
+            if (timeSinceLastPost < cooldownInMs) {
+                const remainingTimeMs = cooldownInMs - timeSinceLastPost;
+                const remainingMinutes = Math.floor(remainingTimeMs / (1000 * 60));
+                const remainingSeconds = Math.floor((remainingTimeMs % (1000 * 60)) / 1000);
+                throw new ApiError(403, `You can only post once every 2 minutes. Please wait ${remainingMinutes}m ${remainingSeconds}s.`);
             }
         }
     }
