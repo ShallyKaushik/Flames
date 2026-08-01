@@ -54,7 +54,7 @@ const getAllPostsService = async (query, userId) => {
         category,
         anonymous,
         page = 1,
-        limit = 20,
+        limit = 100,
         sort = "latest",
     } = query;
 
