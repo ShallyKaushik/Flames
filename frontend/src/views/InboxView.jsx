@@ -7,7 +7,7 @@ import api from '../services/api';
 import defaultPng from '../avatars/default.png';
 import { getAvatarUrl } from '../data/avatars';
 
-export function InboxView({ currentUser }) {
+export function InboxView({ currentUser, onNavigateProfile }) {
   const userName = currentUser?.username || currentUser?.fullName || currentUser?.name || 'User';
   const userSub = `${currentUser?.major ? currentUser.major.substring(0, 2) : 'CS'} '25`;
 
@@ -64,6 +64,8 @@ export function InboxView({ currentUser }) {
     const isAdminViewingAnon = msg.isAnonymous && msg.sender?.username !== "anonymous";
     return {
       id: msg._id,
+      senderId: msg.sender?._id || msg.sender?.id,
+      canViewProfile: !msg.isAnonymous || isAdminViewingAnon,
       author: isAdminViewingAnon 
         ? `${msg.sender?.fullName || msg.sender?.username || 'Unknown'} (Admin View)` 
         : (msg.sender?.fullName || msg.sender?.username || 'Unknown'),
@@ -144,8 +146,11 @@ export function InboxView({ currentUser }) {
             >
               {/* Avatar for received messages */}
               {!isSentByMe && (
-                <div className="shrink-0 mb-1">
-                  {msg.isAnonymous ? (
+                <div 
+                  className={`shrink-0 mb-1 ${msg.canViewProfile ? 'cursor-pointer' : ''}`}
+                  onClick={() => msg.canViewProfile && onNavigateProfile && msg.senderId && onNavigateProfile(msg.senderId)}
+                >
+                  {msg.isAnonymous && !isAdminViewingAnon ? (
                     <div className="w-7 h-7 rounded-full bg-purple-950 text-purple-300 border border-purple-700/50 flex items-center justify-center font-bold text-xs">
                       <EyeOff className="w-3.5 h-3.5" />
                     </div>
@@ -173,7 +178,10 @@ export function InboxView({ currentUser }) {
               >
                 {/* Sender Header: Username ONLY */}
                 <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-1 text-[11px]">
-                  <span className="font-extrabold truncate text-white">
+                  <span 
+                    className={`font-extrabold truncate text-white ${msg.canViewProfile ? 'cursor-pointer hover:underline' : ''}`}
+                    onClick={() => msg.canViewProfile && onNavigateProfile && msg.senderId && onNavigateProfile(msg.senderId)}
+                  >
                     {msg.author}
                   </span>
                   {msg.isAnonymous && (
@@ -196,8 +204,11 @@ export function InboxView({ currentUser }) {
 
               {/* Avatar for sent messages */}
               {isSentByMe && (
-                <div className="shrink-0 mb-1">
-                  {msg.isAnonymous ? (
+                <div 
+                  className="shrink-0 mb-1 cursor-pointer"
+                  onClick={() => onNavigateProfile && msg.senderId && onNavigateProfile(msg.senderId)}
+                >
+                  {msg.isAnonymous && !isAdminViewingAnon ? (
                     <div className="w-7 h-7 rounded-full bg-purple-900 text-purple-200 border border-purple-500/50 flex items-center justify-center font-bold text-xs shadow-xs">
                       <EyeOff className="w-3.5 h-3.5" />
                     </div>

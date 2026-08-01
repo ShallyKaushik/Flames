@@ -393,7 +393,7 @@ export default function App() {
         )}
 
         {(activeRoute === 'inbox' || activeRoute === 'open_chat') && (
-          <InboxView currentUser={currentUser} />
+          <InboxView currentUser={currentUser} onNavigateProfile={handleNavigateProfile} />
         )}
 
         {activeRoute === 'profile' && (
