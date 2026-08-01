@@ -73,7 +73,7 @@ export function DiscoverView({ onSelectCategory }) {
               {announcements.map((a) => (
                 <div key={a._id || a.id} className="bg-[#fcf8f3] border border-[#ebdccf] rounded-2xl p-3 space-y-1">
                   <h3 className="text-xs font-extrabold text-[#2c1a11]">{a.title}</h3>
-                  {a.content && <p className="text-xs text-stone-600 leading-relaxed">{a.content}</p>}
+                  {a.description && <p className="text-xs text-stone-600 leading-relaxed whitespace-pre-line">{a.description}</p>}
                   {a.createdAt && (
                     <span className="text-[10px] text-stone-400">{new Date(a.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                   )}
