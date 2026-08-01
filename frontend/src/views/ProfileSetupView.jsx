@@ -193,7 +193,7 @@ export function ProfileSetupView({ pendingSetupData, onCompleteSetup }) {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[11px] font-bold text-stone-300 uppercase tracking-wider block">Gender (Optional)</label>
+              <label className="text-[11px] font-bold text-stone-300 uppercase tracking-wider block">Gender</label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 bg-[#1c120c] p-1 rounded-2xl border border-[#3d2a20]">
                 {[
                   { id: 'male', label: 'Male' },
