@@ -44,6 +44,10 @@ export function ProfileSetupView({ pendingSetupData, onCompleteSetup }) {
       setError('Please provide a valid, unique username.');
       return;
     }
+    if (!phoneNumber) {
+      setError('Phone number is required.');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -140,16 +144,9 @@ export function ProfileSetupView({ pendingSetupData, onCompleteSetup }) {
               {usernameAvailable === false && <p className="text-[10px] text-red-500 mt-1">Username is already taken.</p>}
             </div>
 
-            </div>
-          </div>
-
-          <div className="h-px bg-[#3d2a20] w-full my-4" />
-
-          {/* Optional Fields */}
-          <div className="space-y-4">
             <div className="space-y-1">
               <label className="text-[11px] font-bold text-stone-300 uppercase tracking-wider block">
-                Phone Number (Optional)
+                Phone Number <span className="text-[#f47b31]">*</span>
               </label>
               <input
                 type="tel"
@@ -157,6 +154,7 @@ export function ProfileSetupView({ pendingSetupData, onCompleteSetup }) {
                 onChange={(e) => setPhoneNumber(e.target.value)}
                 placeholder="+91 XXXXXXXXXX"
                 className="w-full bg-[#1c120c] border border-[#3d2a20] rounded-xl p-3 text-xs text-white placeholder-stone-400 focus:border-[#f47b31] focus:outline-hidden"
+                required
               />
             </div>
           </div>
