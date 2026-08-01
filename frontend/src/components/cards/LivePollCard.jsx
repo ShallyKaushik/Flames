@@ -19,27 +19,36 @@ export function LivePollCard({ post, onUpdatePost, onDeletePost, onEditPost, onO
   const isAuthor = currentUserId === (post.author?._id || post.author?.id);
 
   const handleVote = async (optionId) => {
-    if (post.userVotedOptionId) return; // already voted
-    // Find the index of the option
     const optionIndex = post.options.findIndex(o => o.id === optionId);
     if (optionIndex === -1) return;
 
-    // Optimistic update
-    const total = post.totalVotes + 1;
+    // Optimistic update logic
+    const isUndo = post.userVotedOptionId === optionId;
+    const isChange = post.userVotedOptionId && post.userVotedOptionId !== optionId;
+    
+    let total = post.totalVotes;
+    if (isUndo) total -= 1;
+    else if (!isChange) total += 1;
+
     const updatedOptions = post.options.map((opt) => {
-      const isSelected = opt.id === optionId;
-      const count = isSelected ? opt.count + 1 : opt.count;
+      let count = opt.count;
+      if (isUndo && opt.id === optionId) count -= 1;
+      if (isChange && opt.id === post.userVotedOptionId) count -= 1;
+      if (isChange && opt.id === optionId) count += 1;
+      if (!isUndo && !isChange && opt.id === optionId) count += 1;
+      
       return {
         ...opt,
         count,
-        percentage: Math.round((count / total) * 100),
+        percentage: total > 0 ? Math.round((count / total) * 100) : 0,
       };
     });
+
     onUpdatePost({
       ...post,
       options: updatedOptions,
       totalVotes: total,
-      userVotedOptionId: optionId,
+      userVotedOptionId: isUndo ? null : optionId,
     });
 
     try {

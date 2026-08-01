@@ -334,23 +334,31 @@ const votePollService = async (
         throw new ApiError(400, "Invalid poll option");
     }
 
-    const alreadyVoted = post.poll.votedUsers.some(
+    const alreadyVotedIndex = post.poll.votedUsers.findIndex(
         (vote) => vote.user.toString() === userId.toString()
     );
 
-    if (alreadyVoted) {
-        throw new ApiError(
-            400,
-            "You have already voted in this poll"
-        );
+    if (alreadyVotedIndex !== -1) {
+        const previousVote = post.poll.votedUsers[alreadyVotedIndex];
+        
+        // If clicking the same option, undo the vote
+        if (previousVote.optionIndex === optionIndex) {
+            post.poll.options[optionIndex].votes -= 1;
+            post.poll.votedUsers.splice(alreadyVotedIndex, 1);
+        } else {
+            // Change vote to new option
+            post.poll.options[previousVote.optionIndex].votes -= 1;
+            post.poll.options[optionIndex].votes += 1;
+            post.poll.votedUsers[alreadyVotedIndex].optionIndex = optionIndex;
+        }
+    } else {
+        // New vote
+        post.poll.options[optionIndex].votes += 1;
+        post.poll.votedUsers.push({
+            user: userId,
+            optionIndex,
+        });
     }
-
-    post.poll.options[optionIndex].votes += 1;
-
-    post.poll.votedUsers.push({
-        user: userId,
-        optionIndex,
-    });
 
     await votePoll(post);
 
