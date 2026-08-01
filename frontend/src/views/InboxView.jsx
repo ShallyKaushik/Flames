@@ -150,7 +150,7 @@ export function InboxView({ currentUser, onNavigateProfile }) {
                   className={`shrink-0 mb-1 ${msg.canViewProfile ? 'cursor-pointer' : ''}`}
                   onClick={() => msg.canViewProfile && onNavigateProfile && msg.senderId && onNavigateProfile(msg.senderId)}
                 >
-                  {msg.isAnonymous && !isAdminViewingAnon ? (
+                  {msg.isAnonymous && !msg.canViewProfile ? (
                     <div className="w-7 h-7 rounded-full bg-purple-950 text-purple-300 border border-purple-700/50 flex items-center justify-center font-bold text-xs">
                       <EyeOff className="w-3.5 h-3.5" />
                     </div>
@@ -208,7 +208,7 @@ export function InboxView({ currentUser, onNavigateProfile }) {
                   className="shrink-0 mb-1 cursor-pointer"
                   onClick={() => onNavigateProfile && msg.senderId && onNavigateProfile(msg.senderId)}
                 >
-                  {msg.isAnonymous && !isAdminViewingAnon ? (
+                  {msg.isAnonymous && !msg.canViewProfile ? (
                     <div className="w-7 h-7 rounded-full bg-purple-900 text-purple-200 border border-purple-500/50 flex items-center justify-center font-bold text-xs shadow-xs">
                       <EyeOff className="w-3.5 h-3.5" />
                     </div>
