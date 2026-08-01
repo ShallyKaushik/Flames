@@ -4,7 +4,7 @@ import { getAvatarUrl } from '../data/avatars';
 import { AvatarSelectorModal } from '../components/AvatarSelectorModal';
 import { getProfile, getMyPosts, getMyPolls, getPublicProfile, getPublicPosts, getPublicPolls } from '../services/backendStubs';
 
-export function ProfileView({ currentUser, targetUserId, onLogout, onOpenEditProfile }) {
+export function ProfileView({ currentUser, targetUserId, onLogout, onOpenEditProfile, onOpenAdminDashboard }) {
   const [activeTab, setActiveTab] = useState('my_posts');
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [profile, setProfile] = useState(null);
