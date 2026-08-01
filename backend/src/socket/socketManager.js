@@ -22,4 +22,13 @@ const broadcastNotification = (notification) => {
     }
 };
 
-export { emitNotification, broadcastNotification };
+const broadcastNewPost = (post) => {
+    try {
+        const io = getIO();
+        io.emit("newPost", post);
+    } catch (error) {
+        console.error("Error broadcasting new post:", error);
+    }
+};
+
+export { emitNotification, broadcastNotification, broadcastNewPost };

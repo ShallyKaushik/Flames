@@ -72,6 +72,15 @@ export default function App() {
                setNotifications(prev => [normalizeNotification(rawNotif), ...prev]);
             });
           });
+          socket.on('newPost', (rawPost) => {
+            import('./services/normalizePost').then(({ normalizePost }) => {
+              setPosts(prev => {
+                const id = rawPost._id?.toString() || rawPost.id;
+                if (prev.some(p => p.id === id)) return prev;
+                return [normalizePost(rawPost, currentUser._id || currentUser.id), ...prev];
+              });
+            });
+          });
         }
       });
     }
@@ -215,10 +224,11 @@ export default function App() {
 
   const handleSelectCategory = async (categoryId) => {
     setActiveCategory(categoryId);
+    setIsLoading(true);
     if (categoryId === 'all') {
-      fetchAllPosts().then(setPosts);
+      fetchAllPosts().then(res => { setPosts(res); setIsLoading(false); }).catch(() => setIsLoading(false));
     } else {
-      filterByCategory(categoryId).then(setPosts);
+      filterByCategory(categoryId).then(res => { setPosts(res); setIsLoading(false); }).catch(() => setIsLoading(false));
     }
   };
 

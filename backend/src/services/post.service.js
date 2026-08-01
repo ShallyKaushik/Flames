@@ -25,6 +25,7 @@ const expiryDays = {
 
 import uploadOnCloudinary from "../utils/cloudinary.js";
 import { createNotificationService } from "./notification.service.js";
+import { broadcastNewPost } from "../socket/socketManager.js";
 import { populateUserLikesForPosts } from "../utils/populateLikes.js";
 
 const calculateExpiry = (category) => {
@@ -314,6 +315,9 @@ const createPostService = async (data, user, file) => {
         images: imageUrl ? [imageUrl] : [],
 
     });
+
+    const populatedPost = await getPostByIdService(post._id, user._id);
+    broadcastNewPost(populatedPost);
 
     return post;
 
