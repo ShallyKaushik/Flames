@@ -18,7 +18,7 @@ export function NotificationsModal({ notifications, isOpen, onClose, onClearAll,
         </div>
         <div className="flex items-center gap-1">
           <button
-            onClick={onClearAll}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onClearAll(); }}
             className="text-xs text-[#f47b31] hover:underline px-2 py-1 rounded"
             title="Mark all as read"
           >

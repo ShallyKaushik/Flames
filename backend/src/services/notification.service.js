@@ -26,7 +26,14 @@ const createNotificationService = async (data) => {
 };
 
 const getNotificationsService = async (userId) => {
-    return await getNotificationsForUser(userId);
+    const notifications = await getNotificationsForUser(userId);
+    return notifications.map(notif => {
+        const obj = notif.toObject ? notif.toObject() : notif;
+        if (!obj.recipient) {
+            obj.isRead = obj.readBy && obj.readBy.some(id => id.toString() === userId.toString());
+        }
+        return obj;
+    });
 };
 
 const markNotificationReadService = async (notificationId, userId) => {
@@ -34,6 +41,14 @@ const markNotificationReadService = async (notificationId, userId) => {
 
     if (!notification) {
         throw new ApiError(404, "Notification not found");
+    }
+
+    if (!notification.recipient) {
+        if (!notification.readBy.includes(userId)) {
+            notification.readBy.push(userId);
+            await notification.save();
+        }
+        return notification;
     }
 
     if (notification.recipient && notification.recipient.toString() !== userId.toString()) {

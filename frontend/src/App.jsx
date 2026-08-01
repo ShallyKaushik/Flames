@@ -252,6 +252,9 @@ export default function App() {
     import('./services/backendStubs').then(({ markAllNotificationsRead }) => {
       markAllNotificationsRead().then(() => {
         setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
+        setIsNotificationsOpen(false); // Optionally close modal
+      }).catch(err => {
+        console.error("Failed to mark all as read:", err);
       });
     });
   };

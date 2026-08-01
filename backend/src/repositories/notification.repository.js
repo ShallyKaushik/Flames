@@ -22,10 +22,16 @@ const updateNotificationReadStatus = (notificationId, isRead) =>
     );
 
 const markAllReadForUser = (userId) =>
-    Notification.updateMany(
-        { recipient: userId, isRead: false },
-        { isRead: true }
-    );
+    Promise.all([
+        Notification.updateMany(
+            { recipient: userId, isRead: false },
+            { isRead: true }
+        ),
+        Notification.updateMany(
+            { recipient: null, readBy: { $ne: userId } },
+            { $addToSet: { readBy: userId } }
+        )
+    ]);
 
 export {
     createNotification,
