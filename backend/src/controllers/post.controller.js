@@ -31,7 +31,7 @@ const createPost = asyncHandler(async (req, res) => {
 
 const getAllPosts = asyncHandler(async (req, res) => {
 
-   const posts = await getAllPostsService(req.query);
+   const posts = await getAllPostsService(req.query, req.user?._id);
 
     return res.status(200).json(
         new ApiResponse(
@@ -46,7 +46,7 @@ const getAllPosts = asyncHandler(async (req, res) => {
 const searchPosts = asyncHandler(async (req, res) => {
 
     const result =
-        await searchPostsService(req.query);
+        await searchPostsService(req.query, req.user?._id);
 
     return res.status(200).json(
 
@@ -66,7 +66,7 @@ const searchPosts = asyncHandler(async (req, res) => {
 
 const getPostById = asyncHandler(async (req, res) => {
 
-    const post = await getPostByIdService(req.params.postId);
+    const post = await getPostByIdService(req.params.postId, req.user?._id);
 
     return res.status(200).json(
         new ApiResponse(

@@ -24,6 +24,7 @@ const expiryDays = {
 
 import uploadOnCloudinary from "../utils/cloudinary.js";
 import { createNotificationService } from "./notification.service.js";
+import { populateUserLikesForPosts } from "../utils/populateLikes.js";
 
 const calculateExpiry = (category) => {
     const days = expiryDays[category];
@@ -46,7 +47,7 @@ const calculateExpiry = (category) => {
 //     return post;
 // };
 
-const getAllPostsService = async (query) => {
+const getAllPostsService = async (query, userId) => {
 
     const {
         category,
@@ -98,8 +99,10 @@ const getAllPostsService = async (query) => {
 
     });
 
+    const populatedPosts = await populateUserLikesForPosts(formattedPosts, userId);
+
     return {
-    posts: formattedPosts,
+    posts: populatedPosts,
 
     pagination: {
         currentPage: Number(page),
@@ -117,7 +120,7 @@ const getAllPostsService = async (query) => {
 
 //Search Posts :
 
-const searchPostsService = async (queryParams) => {
+const searchPostsService = async (queryParams, userId) => {
 
     const {
         query,
@@ -174,10 +177,12 @@ const searchPostsService = async (queryParams) => {
         return postObj;
 
     });
+    
+    const populatedPosts = await populateUserLikesForPosts(formattedPosts, userId);
 
     return {
 
-        posts: formattedPosts,
+        posts: populatedPosts,
 
         pagination: {
 
@@ -203,7 +208,7 @@ const searchPostsService = async (queryParams) => {
 
 };
 
-const getPostByIdService = async (postId) => {
+const getPostByIdService = async (postId, userId) => {
 
     const post = await getPostById(postId);
 
@@ -221,7 +226,9 @@ const getPostByIdService = async (postId) => {
         };
     }
 
-    return postObj;
+    const populatedPost = await populateUserLikesForPosts(postObj, userId);
+
+    return populatedPost;
 };
 
 const updatePostService = async (postId, user, data) => {

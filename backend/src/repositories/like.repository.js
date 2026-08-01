@@ -24,9 +24,17 @@ const getLikesCount = (postId) => {
     });
 };
 
+const getLikesForUserAndPosts = (userId, postIds) => {
+    return Like.find({
+        user: userId,
+        post: { $in: postIds }
+    });
+};
+
 export {
     createLike,
     findLike,
     deleteLike,
     getLikesCount,
+    getLikesForUserAndPosts,
 };

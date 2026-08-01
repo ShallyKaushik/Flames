@@ -11,6 +11,7 @@ import {
 } from "../repositories/profile.repository.js";
 
 import ApiError from "../utils/ApiError.js";
+import { populateUserLikesForPosts } from "../utils/populateLikes.js";
 
 const getProfileService = async (userId) => {
 
@@ -94,34 +95,42 @@ const updateProfileService = async (
 const getMyPostsService = async (
     userId,
     page = 1,
-    limit = 10
+    limit = 10,
+    requestingUserId = userId
 ) => {
 
     const skip =
         (page - 1) * limit;
 
-    return await getMyPosts(
+    const posts = await getMyPosts(
         userId,
         skip,
         Number(limit)
     );
+
+    const formatted = posts.map(p => p.toObject());
+    return await populateUserLikesForPosts(formatted, requestingUserId);
 
 };
 
 const getMyPollsService = async (
     userId,
     page = 1,
-    limit = 10
+    limit = 10,
+    requestingUserId = userId
 ) => {
 
     const skip =
         (page - 1) * limit;
 
-    return await getMyPolls(
+    const polls = await getMyPolls(
         userId,
         skip,
         Number(limit)
     );
+
+    const formatted = polls.map(p => p.toObject());
+    return await populateUserLikesForPosts(formatted, requestingUserId);
 
 };
 

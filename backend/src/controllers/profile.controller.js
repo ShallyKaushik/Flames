@@ -99,7 +99,8 @@ const getPublicPosts = asyncHandler(async (req, res) => {
     const posts = await getMyPostsService(
         req.params.userId,
         req.query.page,
-        req.query.limit
+        req.query.limit,
+        req.user?._id
     );
     return res.status(200).json(
         new ApiResponse(200, posts, "Public posts fetched")
@@ -110,7 +111,8 @@ const getPublicPolls = asyncHandler(async (req, res) => {
     const polls = await getMyPollsService(
         req.params.userId,
         req.query.page,
-        req.query.limit
+        req.query.limit,
+        req.user?._id
     );
     return res.status(200).json(
         new ApiResponse(200, polls, "Public polls fetched")
