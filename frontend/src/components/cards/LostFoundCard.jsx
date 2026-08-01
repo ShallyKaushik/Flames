@@ -2,6 +2,7 @@ import React from 'react';
 import { Heart, MessageSquare, Bookmark, MoreHorizontal, CheckCircle2 } from 'lucide-react';
 import { toggleLike, toggleBookmark } from '../../services/backendStubs';
 import { getAvatarUrl } from '../../data/avatars';
+import { Linkify } from '../Linkify';
 
 export function LostFoundCard({ post, onUpdatePost, onOpenComments, onNavigateProfile }) {
   const handleLike = () => {
@@ -64,7 +65,9 @@ export function LostFoundCard({ post, onUpdatePost, onOpenComments, onNavigatePr
       <div className="grid grid-cols-3 gap-3 items-start">
         <div className="col-span-2 space-y-1">
           <h3 className="text-base font-extrabold leading-snug">{post.title}</h3>
-          <p className="text-xs text-stone-600 leading-relaxed">{post.description || post.content}</p>
+          <p className="text-xs text-stone-600 leading-relaxed whitespace-pre-line">
+            <Linkify text={post.content || post.description} />
+          </p>
         </div>
 
         {post.image && (

@@ -4,6 +4,7 @@ import { toggleLike, deletePost } from '../../services/backendStubs';
 import defaultPng from '../../avatars/default.png';
 import { getAvatarUrl } from '../../data/avatars';
 import { PostOptionsDropdown } from './PostOptionsDropdown';
+import { Linkify } from '../Linkify';
 
 export function ImagePostCard({ post, onUpdatePost, onDeletePost, onEditPost, onOpenComments, onNavigateProfile }) {
   const { currentUserId, isAdmin } = (() => {
@@ -81,7 +82,11 @@ export function ImagePostCard({ post, onUpdatePost, onDeletePost, onEditPost, on
       {/* Content */}
       <div className="space-y-2">
         {post.title && <h3 className="text-base font-extrabold leading-snug">{post.title}</h3>}
-        {post.content && <p className="text-xs text-stone-600 leading-relaxed whitespace-pre-line">{post.content}</p>}
+        {post.content && (
+          <p className="text-xs text-stone-600 leading-relaxed whitespace-pre-line">
+            <Linkify text={post.content} />
+          </p>
+        )}
         {post.image && (
           <div className="rounded-2xl overflow-hidden border border-[#e8d7c8] max-h-80 shadow-xs">
             <img src={post.image} alt={post.title || 'Campus post'} className="w-full h-full object-cover" />

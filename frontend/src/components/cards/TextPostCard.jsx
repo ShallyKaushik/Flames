@@ -4,6 +4,7 @@ import { toggleLike, deletePost } from '../../services/backendStubs';
 import defaultPng from '../../avatars/default.png';
 import { getAvatarUrl } from '../../data/avatars';
 import { PostOptionsDropdown } from './PostOptionsDropdown';
+import { Linkify } from '../Linkify';
 
 export function TextPostCard({ post, onUpdatePost, onDeletePost, onEditPost, onOpenComments, onNavigateProfile }) {
   const { currentUserId, isAdmin } = (() => {
@@ -90,7 +91,9 @@ export function TextPostCard({ post, onUpdatePost, onDeletePost, onEditPost, onO
       {/* Content */}
       <div className="space-y-1">
         {post.title && <h3 className="text-base font-extrabold leading-snug">{post.title}</h3>}
-        <p className="text-xs text-stone-600 leading-relaxed whitespace-pre-line">{post.content || post.description}</p>
+        <p className="text-xs text-stone-600 leading-relaxed whitespace-pre-line">
+          <Linkify text={post.content || post.description} />
+        </p>
       </div>
 
       {/* Bottom Actions */}

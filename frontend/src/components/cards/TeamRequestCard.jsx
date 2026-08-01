@@ -2,6 +2,7 @@ import React from 'react';
 import { Heart, MessageSquare, MoreHorizontal, CheckCircle2, UserPlus, Check } from 'lucide-react';
 import { toggleLike, joinTeam, openComments } from '../../services/backendStubs';
 import { getAvatarUrl } from '../../data/avatars';
+import { Linkify } from '../Linkify';
 
 export function TeamRequestCard({ post, onUpdatePost, onOpenComments, onNavigateProfile }) {
   const handleLike = () => {
@@ -63,7 +64,9 @@ export function TeamRequestCard({ post, onUpdatePost, onOpenComments, onNavigate
       {/* Content */}
       <div className="space-y-1">
         <h3 className="text-base font-extrabold leading-snug">{post.title}</h3>
-        <p className="text-xs text-stone-600 leading-relaxed">{post.description}</p>
+        <p className="text-xs text-stone-600 leading-relaxed whitespace-pre-line">
+          <Linkify text={post.description || post.content} />
+        </p>
       </div>
 
       {/* Requirement Chips */}

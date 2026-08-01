@@ -3,6 +3,7 @@ import { EyeOff, Heart, MessageSquare } from 'lucide-react';
 import { castVote, toggleLike, deletePost } from '../../services/backendStubs';
 import defaultPng from '../../avatars/default.png';
 import { getAvatarUrl } from '../../data/avatars';
+import { Linkify } from '../Linkify';
 import { PostOptionsDropdown } from './PostOptionsDropdown';
 
 export function LivePollCard({ post, onUpdatePost, onDeletePost, onEditPost, onOpenComments, onNavigateProfile }) {
@@ -132,6 +133,11 @@ export function LivePollCard({ post, onUpdatePost, onDeletePost, onEditPost, onO
 
       {/* Question */}
       <h3 className="text-base font-extrabold leading-snug">{post.question || post.title}</h3>
+      {post.content && (
+        <p className="text-xs text-stone-600 leading-relaxed whitespace-pre-line mb-3">
+          <Linkify text={post.content} />
+        </p>
+      )}
 
       {/* Poll Options */}
       <div className="space-y-2 py-1">

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { MessageSquare, Send, X, Loader2 } from 'lucide-react';
 import { fetchComments, addComment, deleteComment } from '../services/backendStubs';
+import { Linkify } from './Linkify';
 import defaultPng from '../avatars/default.png';
 import { getAvatarUrl } from '../data/avatars';
 import { Trash2 } from 'lucide-react';
 
-export function CommentsModal({ post, isOpen, onClose, currentUser }) {
+export function CommentsModal({ post, isOpen, onClose, currentUser, onNavigateProfile }) {
   const [comments, setComments] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [newComment, setNewComment] = useState('');
@@ -114,7 +115,9 @@ export function CommentsModal({ post, isOpen, onClose, currentUser }) {
                       {formatCommentTime(c)}{c.isEdited ? ' • Edited' : ''}
                     </span>
                   </div>
-                  <p className="text-xs text-stone-200 leading-relaxed">{c.content || c.text}</p>
+                  <p className="text-xs text-stone-300 mt-1.5 leading-relaxed whitespace-pre-line break-words">
+                    <Linkify text={c.content || c.text} />
+                  </p>
                 </div>
                 {currentUser?.role === 'admin' && (
                   <button

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { CATEGORIES } from '../data/categories';
 import { Sparkles, TrendingUp, Users, ArrowRight, Megaphone, Loader2 } from 'lucide-react';
 import { FoxMascot } from '../components/FoxMascot';
+import { Linkify } from '../components/Linkify';
 import { fetchAnnouncements } from '../services/backendStubs';
 
 export function DiscoverView({ onSelectCategory }) {
@@ -73,7 +74,11 @@ export function DiscoverView({ onSelectCategory }) {
               {announcements.map((a) => (
                 <div key={a._id || a.id} className="bg-[#fcf8f3] border border-[#ebdccf] rounded-2xl p-3 space-y-1">
                   <h3 className="text-xs font-extrabold text-[#2c1a11]">{a.title}</h3>
-                  {a.description && <p className="text-xs text-stone-600 leading-relaxed whitespace-pre-line">{a.description}</p>}
+                  {a.description && (
+                    <p className="text-xs text-stone-600 leading-relaxed whitespace-pre-line">
+                      <Linkify text={a.description} />
+                    </p>
+                  )}
                   {a.createdAt && (
                     <span className="text-[10px] text-stone-400">{new Date(a.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                   )}
