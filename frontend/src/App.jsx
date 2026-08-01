@@ -310,6 +310,24 @@ export default function App() {
         onClose={() => setIsNotificationsOpen(false)}
         onClearAll={handleClearNotifications}
         onMarkRead={handleMarkNotificationRead}
+        onNotificationClick={async (notif) => {
+          if (notif.relatedPost) {
+            let post = posts.find((p) => p.id === notif.relatedPost);
+            if (!post) {
+              try {
+                const { getPost } = await import('./services/backendStubs');
+                post = await getPost(notif.relatedPost);
+              } catch (e) {
+                showToast('Post not found or deleted');
+                return;
+              }
+            }
+            if (post) {
+              setIsNotificationsOpen(false);
+              setCommentsModalState({ isOpen: true, post });
+            }
+          }
+        }}
       />
 
       {/* Profile Side Drawer */}

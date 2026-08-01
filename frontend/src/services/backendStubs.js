@@ -101,6 +101,12 @@ export async function deletePost(postId) {
   await api.delete(`/posts/${postId}`);
 }
 
+export async function getPost(postId) {
+  const response = await api.get(`/posts/${postId}`);
+  const raw = response.data.data;
+  return normalizePost(raw, getCurrentUserId());
+}
+
 // ── Likes ─────────────────────────────────────────────────────────────────────
 
 export async function toggleLike(postId, isCurrentlyLiked) {
@@ -234,7 +240,8 @@ export function normalizeNotification(n) {
     user: n.sender ? n.sender.fullName : 'Flames Admin',
     message: n.message,
     time: timeAgo(n.createdAt),
-    unread: !n.isRead
+    unread: !n.isRead,
+    relatedPost: n.relatedPost
   };
 }
 

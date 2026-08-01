@@ -3,7 +3,7 @@ import { Bell, X } from 'lucide-react';
 import { FoxMascot } from './FoxMascot';
 import { getAvatarUrl } from '../data/avatars';
 
-export function NotificationsModal({ notifications, isOpen, onClose, onClearAll, onMarkRead }) {
+export function NotificationsModal({ notifications, isOpen, onClose, onClearAll, onMarkRead, onNotificationClick }) {
   if (!isOpen) return null;
 
   return (
@@ -45,7 +45,10 @@ export function NotificationsModal({ notifications, isOpen, onClose, onClearAll,
           notifications.map((n) => (
             <div
               key={n.id}
-              onClick={() => n.unread && onMarkRead && onMarkRead(n.id)}
+              onClick={() => {
+                if (n.unread && onMarkRead) onMarkRead(n.id);
+                if (onNotificationClick) onNotificationClick(n);
+              }}
               className={`p-3.5 flex items-start gap-3 hover:bg-[#34241c] transition cursor-pointer ${
                 n.unread ? 'bg-[#312119]' : ''
               }`}
