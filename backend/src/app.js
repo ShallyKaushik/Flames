@@ -43,6 +43,12 @@ app.use(
     announcementRoutes
 );
 
+import organizationRoutes from "./routes/organization.routes.js";
+app.use(
+    "/api/v1/organizations",
+    organizationRoutes
+);
+
 app.use(
     "/api/v1/discussion",
     discussionRoutes

@@ -34,6 +34,7 @@ export default function HeroSection() {
         <p className="text-stone-200 text-xs sm:text-sm leading-relaxed font-medium drop-shadow-sm">
           Connect with verified students, discover campus events, find teammates, ask anonymously, buy and sell, join clubs, and stay updated with everything happening around your campus—all in one place.
         </p>
+        
       </div>
 
       {/* Footer copyright */}

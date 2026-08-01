@@ -3,17 +3,24 @@ import { CATEGORIES } from '../data/categories';
 import { Sparkles, TrendingUp, Users, ArrowRight, Megaphone, Loader2 } from 'lucide-react';
 import { FoxMascot } from '../components/FoxMascot';
 import { Linkify } from '../components/Linkify';
-import { fetchAnnouncements } from '../services/backendStubs';
+import { fetchAnnouncements, fetchOrganizations } from '../services/backendStubs';
 
 export function DiscoverView({ onSelectCategory }) {
   const [announcements, setAnnouncements] = useState([]);
   const [isLoadingAnnouncements, setIsLoadingAnnouncements] = useState(true);
+  const [organizations, setOrganizations] = useState([]);
+  const [isLoadingOrgs, setIsLoadingOrgs] = useState(true);
 
   useEffect(() => {
     fetchAnnouncements()
       .then(setAnnouncements)
       .catch(() => setAnnouncements([]))
       .finally(() => setIsLoadingAnnouncements(false));
+
+    fetchOrganizations()
+      .then(setOrganizations)
+      .catch(() => setOrganizations([]))
+      .finally(() => setIsLoadingOrgs(false));
   }, []);
   return (
     <div className="bg-[#fcf8f3] text-[#2c1a11] min-h-screen pb-24 animate-fade-in font-sans">
@@ -106,22 +113,46 @@ export function DiscoverView({ onSelectCategory }) {
           </div>
         </div>
 
-        {/* Featured Student Organizations Section (Coming Soon with Sleeping Fox Mascot 9) */}
+        {/* Featured Student Organizations Section */}
         <div className="bg-white p-5 rounded-3xl border border-[#ebdccf] shadow-xs space-y-4">
           <div className="flex items-center gap-2">
             <Users className="w-4.5 h-4.5 text-[#f47b31]" />
             <h2 className="text-sm font-extrabold text-[#2c1a11]">Featured Student Organizations</h2>
           </div>
 
-          <div className="bg-[#fcf8f3] border border-[#ebdccf] rounded-2xl p-6 flex flex-col items-center justify-center text-center space-y-2">
-            <FoxMascot variant="9" className="w-20 h-20 object-contain" />
-            <span className="text-xs font-extrabold text-[#f47b31] uppercase tracking-wider">
-              Coming Soon
-            </span>
-            <p className="text-xs text-stone-500 max-w-xs">
-              Official student club profiles and society directories are coming soon.
-            </p>
-          </div>
+          {isLoadingOrgs ? (
+            <div className="flex justify-center py-4">
+              <Loader2 className="w-5 h-5 text-[#f47b31] animate-spin" />
+            </div>
+          ) : organizations.length === 0 ? (
+            <div className="bg-[#fcf8f3] border border-[#ebdccf] rounded-2xl p-6 flex flex-col items-center justify-center text-center space-y-2">
+              <FoxMascot variant="9" className="w-20 h-20 object-contain" />
+              <span className="text-xs font-extrabold text-[#f47b31] uppercase tracking-wider">
+                Coming Soon
+              </span>
+              <p className="text-xs text-stone-500 max-w-xs">
+                Official student club profiles and society directories are coming soon.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {organizations.map(org => (
+                <div key={org._id || org.id} className="bg-[#fcf8f3] border border-[#ebdccf] rounded-2xl p-4 space-y-2 flex flex-col">
+                  <div className="flex flex-col">
+                    <h3 className="text-sm font-extrabold text-[#2c1a11]">{org.name}</h3>
+                    {org.link && (
+                      <a href={org.link} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-[#f47b31] hover:underline break-all">
+                        Visit Page &rarr;
+                      </a>
+                    )}
+                  </div>
+                  <p className="text-xs text-stone-600 leading-relaxed whitespace-pre-line">
+                    <Linkify text={org.description} />
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
