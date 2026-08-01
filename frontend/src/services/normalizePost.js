@@ -122,6 +122,7 @@ export function normalizePost(backendPost, currentUserId) {
     isLiked,
     isBookmarked: false,
     isEdited: !!p.isEdited,
+    isMe: !!p.isMe,
   };
 }
 
