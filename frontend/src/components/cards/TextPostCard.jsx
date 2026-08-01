@@ -17,7 +17,7 @@ export function TextPostCard({ post, onUpdatePost, onDeletePost, onEditPost, onO
     } catch (_) {}
     return { currentUserId: null, isAdmin: false };
   })();
-  const isAuthor = currentUserId === (post.author?._id || post.author?.id);
+  const isAuthor = post.isMe || currentUserId === (post.author?._id || post.author?.id);
 
   const handleLike = async () => {
     // Optimistic update

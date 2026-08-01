@@ -89,6 +89,10 @@ const getAllPostsService = async (query, userId) => {
 
         const postObj = post.toObject();
 
+        if (userId && postObj.author?._id) {
+            postObj.isMe = postObj.author._id.toString() === userId.toString();
+        }
+
         if (postObj.isAnonymous) {
             postObj.author = {
                 fullName: "Anonymous",
@@ -168,6 +172,10 @@ const searchPostsService = async (queryParams, userId) => {
 
         const postObj = post.toObject();
 
+        if (userId && postObj.author?._id) {
+            postObj.isMe = postObj.author._id.toString() === userId.toString();
+        }
+
         if (postObj.isAnonymous) {
             postObj.author = {
                 fullName: "Anonymous",
@@ -219,6 +227,10 @@ const getPostByIdService = async (postId, userId) => {
     }
 
     const postObj = post.toObject();
+
+    if (userId && postObj.author?._id) {
+        postObj.isMe = postObj.author._id.toString() === userId.toString();
+    }
 
     if (postObj.isAnonymous) {
         postObj.author = {
@@ -317,9 +329,12 @@ const createPostService = async (data, user, file) => {
     });
 
     const populatedPost = await getPostByIdService(post._id, user._id);
-    broadcastNewPost(populatedPost);
+    
+    // Broadcast without the specific user's isMe flag
+    const broadcastData = { ...populatedPost, isMe: false };
+    broadcastNewPost(broadcastData);
 
-    return post;
+    return populatedPost;
 
 };
 

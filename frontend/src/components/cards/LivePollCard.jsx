@@ -17,7 +17,7 @@ export function LivePollCard({ post, onUpdatePost, onDeletePost, onEditPost, onO
     } catch (_) {}
     return { currentUserId: null, isAdmin: false };
   })();
-  const isAuthor = currentUserId === (post.author?._id || post.author?.id);
+  const isAuthor = post.isMe || currentUserId === (post.author?._id || post.author?.id);
 
   const handleVote = async (optionId) => {
     const optionIndex = post.options.findIndex(o => o.id === optionId);
