@@ -96,7 +96,7 @@ export function CreatePostModal({ isOpen, onClose, onSubmitPost, initialType = '
       category,
       isAnonymous,
       title: title.trim(),
-      content: description.trim(),
+      content: postType === 'poll' ? title.trim() : description.trim(),
     };
 
     if (postType === 'image' && imageFile) {
