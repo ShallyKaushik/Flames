@@ -42,7 +42,7 @@ const createCommentService = async (
         sender: userId,
         type: "comment",
         title: "New Comment",
-        message: "Someone commented on your post.",
+        message: "commented on your post.",
         relatedPost: postId,
         relatedComment: comment._id
     });

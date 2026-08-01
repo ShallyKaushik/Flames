@@ -41,7 +41,7 @@ const likePostService = async (postId, userId) => {
         sender: userId,
         type: "like",
         title: "New Like",
-        message: "Someone liked your post.",
+        message: "liked your post.",
         relatedPost: postId
     });
 
