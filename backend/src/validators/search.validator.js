@@ -23,7 +23,7 @@ export const searchPostsValidator = [
             "academics",
             "societies",
             "teamup",
-            "events",
+            "food",
             "commute",
             "sports",
             "lost-found",

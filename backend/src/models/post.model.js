@@ -29,7 +29,7 @@ const postSchema = new mongoose.Schema(
                 "societies",
                 "academics",
                 "commute",
-                "events",
+                "food",
                 "teamup",
                 "sports",
                 "lost-found",

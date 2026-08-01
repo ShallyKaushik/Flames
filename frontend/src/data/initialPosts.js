@@ -67,8 +67,8 @@ export const INITIAL_POSTS = [
   {
     id: 'post_3',
     type: 'image',
-    category: 'events',
-    categoryLabel: 'EVENTS',
+    category: 'food',
+    categoryLabel: 'FOOD',
     timeAgo: '4h ago',
     author: {
       name: 'Campus Photography Club',

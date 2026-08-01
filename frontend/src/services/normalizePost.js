@@ -19,7 +19,7 @@ const CATEGORY_LABELS = {
   academics: 'ACADEMICS',
   societies: 'SOCIETIES',
   teamup: 'TEAM UP',
-  events: 'EVENTS',
+  food: 'FOOD',
   travel: 'TRAVEL',
   sports: 'SPORTS',
   'lost-found': 'LOST & FOUND',

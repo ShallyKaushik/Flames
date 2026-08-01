@@ -16,7 +16,7 @@ const expiryDays = {
     academics: 30,
     societies: 5,
     teamup: 3,
-    events: 5,
+    food: 5,
     travel: 2,
     sports: 7,
     "lost-found": 15,
