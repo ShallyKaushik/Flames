@@ -13,7 +13,7 @@ import {
 } from "../repositories/post.repository.js";
 const expiryDays = {
     general: 3,
-    academics: 5,
+    academics: 30,
     societies: 5,
     teamup: 3,
     events: 5,
