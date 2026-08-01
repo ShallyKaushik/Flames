@@ -7,9 +7,10 @@ import { checkUsernameApi, completeProfileApi } from '../services/authApi';
 export function ProfileSetupView({ pendingSetupData, onCompleteSetup }) {
   const { idToken, googleData } = pendingSetupData;
 
-  const [selectedAvatar, setSelectedAvatar] = useState(googleData.picture || DEFAULT_AVATAR);
+  const [selectedAvatar, setSelectedAvatar] = useState(DEFAULT_AVATAR);
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   
+  const [fullName, setFullName] = useState('');
   const [username, setUsername] = useState('');
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [usernameAvailable, setUsernameAvailable] = useState(null);
@@ -44,6 +45,10 @@ export function ProfileSetupView({ pendingSetupData, onCompleteSetup }) {
       setError('Please provide a valid, unique username.');
       return;
     }
+    if (!fullName.trim()) {
+      setError('Full Name is required.');
+      return;
+    }
     if (!phoneNumber) {
       setError('Phone number is required.');
       return;
@@ -55,7 +60,7 @@ export function ProfileSetupView({ pendingSetupData, onCompleteSetup }) {
         idToken,
         username,
         phoneNumber,
-        fullName: googleData.fullName,
+        fullName: fullName.trim(),
         avatar: selectedAvatar.url || selectedAvatar, // url from AVATARS or string
         personalEmail,
         bio: bio.trim(),
@@ -108,8 +113,17 @@ export function ProfileSetupView({ pendingSetupData, onCompleteSetup }) {
           {/* Read-only fields */}
           <div className="space-y-3">
             <div className="space-y-1">
-              <label className="text-[11px] font-bold text-stone-300 uppercase tracking-wider block">Full Name</label>
-              <input type="text" readOnly value={googleData.fullName} className="w-full bg-[#1c120c]/50 border border-[#3d2a20] rounded-xl p-3 text-xs text-stone-500 cursor-not-allowed" />
+              <label className="text-[11px] font-bold text-stone-300 uppercase tracking-wider block">
+                Full Name <span className="text-[#f47b31]">*</span>
+              </label>
+              <input 
+                type="text" 
+                value={fullName} 
+                onChange={(e) => setFullName(e.target.value)} 
+                placeholder="Enter your full name" 
+                className="w-full bg-[#1c120c] border border-[#3d2a20] rounded-xl p-3 text-xs text-white placeholder-stone-400 focus:border-[#f47b31] focus:outline-hidden"
+                required 
+              />
             </div>
             <div className="space-y-1">
               <label className="text-[11px] font-bold text-stone-300 uppercase tracking-wider block">College Email</label>
